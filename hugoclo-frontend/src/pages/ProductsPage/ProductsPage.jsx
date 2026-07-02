@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { HomeOutlined, LeftOutlined, RightOutlined, SearchOutlined, LoadingOutlined } from '@ant-design/icons';
+import { HomeOutlined, LeftOutlined, RightOutlined, SearchOutlined, LoadingOutlined, WarningOutlined } from '@ant-design/icons';
 import { Spin } from 'antd';
 import { fetchProducts } from '../../api/productService';
 import ProductCard   from './components/ProductCard';
@@ -125,16 +125,24 @@ const ProductsPage = () => {
     };
 
     // Quick filter
-    if (quickFilter === 'sale')   params.isOnSale = true;
-    if (quickFilter === 'men')    params.category  = 'men';
-    if (quickFilter === 'women')  params.category  = 'women';
+    if (quickFilter === 'sale')      params.isOnSale     = true;
+    if (quickFilter === 'men')       params.category     = 'men';
+    if (quickFilter === 'women')     params.category     = 'women';
+    if (quickFilter === 'tops')      params.productType  = 'tops';
+    if (quickFilter === 'bottoms')   params.productType  = 'bottoms';
+    if (quickFilter === 'shoes')     params.productType  = 'shoes';
+    if (quickFilter === 'accessory') params.productType  = 'accessory';
 
     // Sidebar filters
-    if (filters.categories.length === 1) params.category = filters.categories[0];
+    // Danh mục (gender) — hỗ trợ nhiều lựa chọn
+    if (filters.categories.length > 0) params.genders = filters.categories.join(',');
     if (filters.priceRange[0] > 0)       params.minPrice  = filters.priceRange[0];
     if (filters.priceRange[1] < 2000000) params.maxPrice  = filters.priceRange[1];
     if (filters.rating)                  params.minRating  = filters.rating;
-    if (filters.sizes.length === 1)      params.size       = filters.sizes[0];
+    // Kích thước — hỗ trợ nhiều lựa chọn
+    if (filters.sizes.length > 0)        params.sizes      = filters.sizes.join(',');
+    // Màu sắc — gửi hex codes
+    if (filters.colors.length > 0)       params.colors     = filters.colors.join(',');
 
     return params;
   }, [page, perPage, sortBy, quickFilter, filters]);
@@ -227,9 +235,8 @@ const ProductsPage = () => {
             {/* Error state */}
             {error && !loading && (
               <div className="flex flex-col items-center justify-center py-20 text-center">
-                <span className="text-5xl mb-4">⚠️</span>
-                <h3 className="text-[18px] font-bold text-[#1a1a1a] mb-2">Không thể tải sản phẩm</h3>
-                <p className="text-[#888] mb-4">{error}</p>
+                <WarningOutlined style={{ fontSize: '58px', marginBottom: '16px' }} />
+                <h3 className="text-[20px] font-bold text-[#1a1a1a] mb-3">Không tìm thấy sản phẩm</h3>
                 <button
                   onClick={() => setError(null)}
                   className="h-10 px-6 bg-[#1a1a1a] text-white text-[13px] font-semibold rounded-lg border-none cursor-pointer hover:bg-[#333]"

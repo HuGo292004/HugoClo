@@ -84,7 +84,7 @@ const ProductCard = ({ product }) => {
             hovered ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'
           }`}
         >
-          <button
+          {/* <button
             onClick={handleAddToCart}
             className="flex items-center gap-1.5 text-white text-[12px] font-semibold tracking-[0.06em] bg-transparent border-none cursor-pointer hover:text-[#f0f0f0] uppercase"
           >
@@ -95,7 +95,7 @@ const ProductCard = ({ product }) => {
           <button className="flex items-center gap-1.5 text-white text-[12px] font-semibold tracking-[0.06em] bg-transparent border-none cursor-pointer hover:text-[#f0f0f0] uppercase">
             <EyeOutlined />
             Xem Nhanh
-          </button>
+          </button> */}
         </div>
       </div>
 

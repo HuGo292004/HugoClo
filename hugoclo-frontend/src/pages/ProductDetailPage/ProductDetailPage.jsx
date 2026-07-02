@@ -22,6 +22,7 @@ import {
   ShoppingCartOutlined,
   ThunderboltOutlined,
   LoadingOutlined,
+  WarningOutlined,
 } from '@ant-design/icons';
 
 import { fetchProductById, fetchProductReviews, fetchProducts, markHelpful as apiMarkHelpful } from '../../api/productService';
@@ -183,7 +184,7 @@ const ProductDetailPage = () => {
   // ── Error ──────────────────────────────────────────
   if (error) return (
     <div className="container-custom py-24 text-center">
-      <span className="text-6xl">⚠️</span>
+      <WarningOutlined style={{ fontSize: '48px'}} />
       <h2 className="text-[24px] font-bold mt-4 mb-2">Không thể tải sản phẩm</h2>
       <p className="text-[#888] mb-6">{error}</p>
       <Link to="/products" className="inline-block h-10 px-6 bg-[#1a1a1a] text-white text-[13px] font-semibold rounded-lg leading-10 no-underline hover:bg-[#333]">
@@ -198,10 +199,14 @@ const ProductDetailPage = () => {
     ? Math.round((1 - product.price / product.originalPrice) * 100)
     : 0;
 
-  const images    = product.images?.length ? product.images : [null];
-  const colors    = product.colors || [];
-  const sizes     = product.sizes  || [];
+  const allImages  = product.images?.length ? product.images : [null];
+  const colors     = product.colors || [];
+  const sizes      = product.sizes  || [];
   const categoryLabel = product.category?.name || '';
+
+  // ── Ảnh hiển thị: ưu tiên ảnh của màu đang chọn ──
+  const colorImages = colors[selectedColor]?.images;
+  const images = colorImages?.length ? colorImages : allImages;
 
   return (
     <div className="min-h-screen bg-white">
@@ -361,7 +366,16 @@ const ProductDetailPage = () => {
                   {colors.map((color, i) => (
                     <button
                       key={i}
-                      onClick={() => setColor(i)}
+                      onClick={() => {
+                        setColor(i);
+                        // Nếu màu có ảnh riêng → dùng ảnh đó, không → nhảy tới images[i]
+                        const cImgs = color.images;
+                        if (cImgs?.length) {
+                          setActiveImg(0);
+                        } else {
+                          setActiveImg(Math.min(i, allImages.length - 1));
+                        }
+                      }}
                       title={color.name}
                       className={`w-10 h-10 rounded-full border-2 cursor-pointer transition-all duration-200 hover:scale-110 relative ${
                         i === selectedColor

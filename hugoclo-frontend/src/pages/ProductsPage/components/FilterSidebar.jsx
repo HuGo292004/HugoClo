@@ -98,10 +98,10 @@ const FilterSidebar = ({ filters, onChange, onReset }) => {
     onChange({ sizes: next });
   };
 
-  const toggleColor = (color) => {
-    const next = colors.includes(color)
-      ? colors.filter((c) => c !== color)
-      : [...colors, color];
+  const toggleColor = (hex) => {
+    const next = colors.includes(hex)
+      ? colors.filter((c) => c !== hex)
+      : [...colors, hex];
     onChange({ colors: next });
   };
 
@@ -179,8 +179,8 @@ const FilterSidebar = ({ filters, onChange, onReset }) => {
               key={color}
               color={color}
               hex={hex}
-              selected={colors.includes(color)}
-              onClick={() => toggleColor(color)}
+              selected={colors.includes(hex)}
+              onClick={() => toggleColor(hex)}
             />
           ))}
         </div>

@@ -2,8 +2,9 @@
 // productController.js — CRUD + filter/sort/paginate + reviews
 // ============================================================
 
-const Product = require("../models/Product");
-const Review  = require("../models/Review");
+const Product  = require("../models/Product");
+const Review   = require("../models/Review");
+
 
 /* ── Tạo sản phẩm (kèm upload ảnh Cloudinary) ────────────── */
 const createProduct = async (req, res) => {
@@ -44,33 +45,63 @@ const getProducts = async (req, res) => {
       filter.name = { $regex: req.query.keyword, $options: "i" };
     }
 
-    // Lọc danh mục (ObjectId hoặc slug)
-    if (req.query.category) {
+    // ── Lọc gender ────────────────────────────────────────────
+    // ?category=men  (quick filter — single)
+    // ?gender=men    (legacy)
+    // ?genders=men,women,unisex  (sidebar — multi)
+    const GENDERS = ["men", "women", "unisex"];
+
+    if (req.query.genders) {
+      const gList = req.query.genders.split(",").filter((g) => GENDERS.includes(g));
+      if (gList.length === 1) filter.gender = gList[0];
+      else if (gList.length > 1) filter.gender = { $in: gList };
+    } else if (req.query.category && GENDERS.includes(req.query.category)) {
+      filter.gender = req.query.category;
+    } else if (req.query.gender && GENDERS.includes(req.query.gender)) {
+      filter.gender = req.query.gender;
+    } else if (req.query.category) {
+      // ObjectId
       filter.category = req.query.category;
     }
 
-    // Lọc sale
+    // ── Lọc sale ──────────────────────────────────────────────
     if (req.query.isOnSale === "true") {
       filter.isOnSale = true;
     }
 
-    // Lọc giá
+    // ── Lọc giá ───────────────────────────────────────────────
     if (req.query.minPrice || req.query.maxPrice) {
       filter.price = {};
       if (req.query.minPrice) filter.price.$gte = Number(req.query.minPrice);
       if (req.query.maxPrice) filter.price.$lte = Number(req.query.maxPrice);
     }
 
-    // Lọc rating tối thiểu
+    // ── Lọc rating tối thiểu ──────────────────────────────────
     if (req.query.minRating) {
       filter.rating = { $gte: Number(req.query.minRating) };
     }
 
-    // Lọc size khả dụng
-    if (req.query.size) {
+    // ── Lọc size (multi) ──────────────────────────────────────
+    if (req.query.sizes) {
+      const sizeList = req.query.sizes.split(",");
+      filter.sizes = {
+        $elemMatch: { label: { $in: sizeList }, available: true },
+      };
+    } else if (req.query.size) {
       filter.sizes = {
         $elemMatch: { label: req.query.size, available: true },
       };
+    }
+
+    // ── Lọc màu sắc theo hex code (multi) ─────────────────────
+    if (req.query.colors) {
+      const hexList = req.query.colors.split(",");
+      filter["colors.code"] = { $in: hexList };
+    }
+
+    // ── Lọc loại sản phẩm ─────────────────────────────────────
+    if (req.query.productType) {
+      filter.productType = req.query.productType;
     }
 
     // ── Build sort ────────────────────────────────────────────

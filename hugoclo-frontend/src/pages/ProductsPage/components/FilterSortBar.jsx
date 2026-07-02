@@ -10,10 +10,11 @@ const QUICK_FILTERS = [
   { key: 'all',        label: 'Tất Cả' },
   { key: 'men',        label: 'Nam' },
   { key: 'women',      label: 'Nữ' },
+  { key: 'unisex', label: 'Unisex'},
   { key: 'tops',       label: 'Áo' },
   { key: 'bottoms',    label: 'Quần' },
   { key: 'accessory',  label: 'Phụ Kiện' },
-  { key: 'sale',       label: '🔥 Sale' },
+  { key: 'sale',       label: ' Sale' },
 ];
 
 const SORT_OPTIONS = [
