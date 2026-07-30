@@ -7,6 +7,7 @@ import { Link } from 'react-router-dom';
 import { HeartOutlined, HeartFilled, EyeOutlined, ShoppingCartOutlined } from '@ant-design/icons';
 import { message } from 'antd';
 import { formatPrice } from '../../../data/products';
+import { useCart } from '../../../context/CartContext';
 
 const StarRating = ({ rating, count }) => (
   <div className="flex items-center gap-1.5">
@@ -24,6 +25,7 @@ const StarRating = ({ rating, count }) => (
 const ProductCard = ({ product }) => {
   const [wished, setWished]   = useState(false);
   const [hovered, setHovered] = useState(false);
+  const { addToCart }        = useCart();
 
   const discount = product.originalPrice
     ? Math.round((1 - product.price / product.originalPrice) * 100)
@@ -31,7 +33,7 @@ const ProductCard = ({ product }) => {
 
   const handleAddToCart = (e) => {
     e.stopPropagation();
-    message.success(`Đã thêm "${product.name}" vào giỏ hàng!`);
+    addToCart(product, 1);
   };
 
   const handleWish = (e) => {

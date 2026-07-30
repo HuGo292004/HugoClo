@@ -28,6 +28,7 @@ import {
 import { fetchProductById, fetchProductReviews, fetchProducts, markHelpful as apiMarkHelpful } from '../../api/productService';
 import { formatPrice } from '../../data/products';
 import ProductCard from '../ProductsPage/components/ProductCard';
+import { useCart } from '../../context/CartContext';
 
 /* ── Star renderer ─────────────────────────────────── */
 const Stars = ({ rating, size = 14 }) => (
@@ -145,10 +146,12 @@ const ProductDetailPage = () => {
     }).catch(() => setRelated([]));
   }, [product, id]);
 
+  const { addToCart } = useCart();
+
   // ── Handlers ───────────────────────────────────────
   const handleCart = () => {
     if (!product) return;
-    message.success(`Đã thêm "${product.name}" vào giỏ hàng!`);
+    addToCart(product, quantity);
   };
 
   const handleBuyNow = () => {

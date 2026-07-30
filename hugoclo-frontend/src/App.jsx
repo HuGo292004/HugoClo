@@ -13,6 +13,7 @@ import AuthPage from './pages/AuthPage/AuthPage';
 import ProductsPage from './pages/ProductsPage/ProductsPage';
 import ProductDetailPage from './pages/ProductDetailPage/ProductDetailPage';
 import { AuthProvider } from './context/AuthContext';
+import { CartProvider } from './context/CartContext';
 import './index.css';
 
 const antdTheme = {
@@ -40,7 +41,8 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <ConfigProvider theme={antdTheme} locale={viVN}>
+        <CartProvider>
+          <ConfigProvider theme={antdTheme} locale={viVN}>
           <Routes>
             {/* Home — full header + footer */}
             <Route
@@ -79,8 +81,9 @@ function App() {
             <Route path="*" element={<MainLayout><HomePage /></MainLayout>} />
           </Routes>
         </ConfigProvider>
-      </AuthProvider>
-    </BrowserRouter>
+      </CartProvider>
+    </AuthProvider>
+  </BrowserRouter>
   );
 }
 

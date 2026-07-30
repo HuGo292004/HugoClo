@@ -6,16 +6,20 @@ import React, { useState } from 'react';
 import { Rate, message } from 'antd';
 import { HeartOutlined, HeartFilled, EyeOutlined, ShoppingCartOutlined } from '@ant-design/icons';
 import { PRODUCTS, formatPrice } from '../../../data/products';
+import { useCart } from '../../../context/CartContext';
 
 /* ── Product Card ── */
 const ProductCard = ({ product }) => {
   const [wishlisted,  setWishlisted]  = useState(false);
   const [addedToCart, setAddedToCart] = useState(false);
+  const { addToCart }                 = useCart();
 
-  const handleCart = () => {
-    setAddedToCart(true);
-    message.success(`Đã thêm "${product.name}" vào giỏ hàng!`);
-    setTimeout(() => setAddedToCart(false), 2000);
+  const handleCart = async () => {
+    const success = await addToCart(product, 1);
+    if (success) {
+      setAddedToCart(true);
+      setTimeout(() => setAddedToCart(false), 2000);
+    }
   };
 
   const handleWishlist = (e) => {

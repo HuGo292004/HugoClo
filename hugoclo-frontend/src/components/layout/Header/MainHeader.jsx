@@ -16,6 +16,7 @@ import {
 } from '@ant-design/icons';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
+import { useCart } from '../../../context/CartContext';
 import logo from '../../../assets/hugoclo_logo.png';
 
 const NAV_ITEMS = [
@@ -32,6 +33,7 @@ const MainHeader = () => {
   const [scrolled,       setScrolled]       = useState(false);
 
   const { user, isLoggedIn, logout } = useAuth();
+  const { cartCount }                = useCart();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -84,7 +86,7 @@ const MainHeader = () => {
           <img src={logo} alt="HugoClo Logo" className="h-[72px] w-full object-contain" />
           <div className="flex flex-col leading-none">
             <span className="text-xl font-black text-primary tracking-[0.06em] font-['Inter']">HUGOCLO</span>
-            <span className="text-[10px] text-[#999] tracking-[0.12em] lowercase mt-0.5">est. 2024</span>
+            <span className="text-[10px] text-[#999] tracking-[0.12em] lowercase mt-0.5">est. 2026</span>
           </div>
         </a>
 
@@ -138,7 +140,7 @@ const MainHeader = () => {
 
           {/* Cart */}
           <IconBtn aria="Giỏ hàng">
-            <Badge count={isLoggedIn ? 3 : 0} size="small" color="#1a1a1a" offset={[2, -2]}>
+            <Badge count={isLoggedIn ? cartCount : 0} size="small" color="#1a1a1a" offset={[2, -2]}>
               <ShoppingCartOutlined className="text-[18px]" />
             </Badge>
           </IconBtn>

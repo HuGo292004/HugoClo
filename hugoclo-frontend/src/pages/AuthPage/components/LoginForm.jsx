@@ -39,7 +39,8 @@ const LoginForm = ({ onSwitchToRegister }) => {
     try {
       const { user } = await login({ email, password });
       message.success(`Chào mừng trở lại, ${user.fullName}`);
-      navigate('/');
+      const redirectUrl = localStorage.getItem('redirect_after_login') || '/';
+      navigate(redirectUrl);
     } catch (err) {
       const msg = err?.response?.data?.message || 'Đăng nhập thất bại. Vui lòng thử lại.';
       message.error(msg);
