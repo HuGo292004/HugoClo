@@ -13,6 +13,8 @@ import AuthPage from './pages/AuthPage/AuthPage';
 import ProductsPage from './pages/ProductsPage/ProductsPage';
 import ProductDetailPage from './pages/ProductDetailPage/ProductDetailPage';
 import CartPage from './pages/CartPage/CartPage';
+import MenPage from './pages/MenPage/MenPage';
+import WomenPage from './pages/WomenPage/WomenPage';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import './index.css';
@@ -74,6 +76,26 @@ function App() {
               element={
                 <MainLayout>
                   <ProductDetailPage />
+                </MainLayout>
+              }
+            />
+
+            {/* Men */}
+            <Route
+              path="/men"
+              element={
+                <MainLayout>
+                  <MenPage />
+                </MainLayout>
+              }
+            />
+
+            {/* Women */}
+            <Route
+              path="/women"
+              element={
+                <MainLayout>
+                  <WomenPage />
                 </MainLayout>
               }
             />

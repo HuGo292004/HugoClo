@@ -215,22 +215,22 @@ const ProductDetailPage = () => {
     <div className="min-h-screen bg-white">
 
       {/* ── Breadcrumb ── */}
-      <div className="bg-[#fafafa] border-b border-[#ebebeb]">
+      <div className="bg-white border-b border-[#ebebeb]">
         <div className="container-custom py-3.5">
-          <nav className="flex items-center gap-2 text-[12px] text-[#999]" aria-label="breadcrumb">
-            <Link to="/" className="flex items-center gap-1 hover:text-[#1a1a1a] transition-colors no-underline text-[#999]">
+          <nav className="flex items-center gap-2 text-[14px] text-[#999] flex-wrap" aria-label="breadcrumb">
+            <Link to="/" className="flex items-center gap-1.5 hover:text-[#1a1a1a] transition-colors no-underline text-[#999] font-medium">
               <HomeOutlined /> <span>Trang Chủ</span>
             </Link>
             <span className="text-[#ccc]">/</span>
-            <Link to="/products" className="hover:text-[#1a1a1a] transition-colors text-[#999]">Sản Phẩm</Link>
+            <Link to="/products" className="hover:text-[#1a1a1a] transition-colors text-[#999] font-medium">Sản Phẩm</Link>
             {categoryLabel && (
               <>
                 <span className="text-[#ccc]">/</span>
-                <span className="text-[#999]">{categoryLabel}</span>
+                <span className="text-[#999] font-medium">{categoryLabel}</span>
               </>
             )}
             <span className="text-[#ccc]">/</span>
-            <span className="text-[#1a1a1a] font-medium truncate max-w-[200px]">{product.name}</span>
+            <span className="font-semibold text-[#1a1a1a]">{product.name}</span>
           </nav>
         </div>
       </div>

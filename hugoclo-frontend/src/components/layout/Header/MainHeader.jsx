@@ -20,9 +20,9 @@ import { useCart } from '../../../context/CartContext';
 import logo from '../../../assets/hugoclo_logo.png';
 
 const NAV_ITEMS = [
-  { key: 'products', label: 'Sản Phẩm', navigate: '/products' },
-  { key: 'men',        label: 'Nam' },
-  { key: 'women',      label: 'Nữ' },
+  { key: 'products',   label: 'Sản Phẩm',   navigate: '/products' },
+  { key: 'men',        label: 'Nam',         navigate: '/men' },
+  { key: 'women',      label: 'Nữ',          navigate: '/women' },
   { key: 'collection', label: 'Bộ Sưu Tập' },
   { key: 'sale',       label: 'Sale', highlight: true },
 ];
@@ -92,22 +92,39 @@ const MainHeader = () => {
 
         {/* ── Desktop Navigation ── */}
         <nav className="hidden md:flex items-center gap-8 flex-1 justify-center" aria-label="Điều hướng chính">
-          {NAV_ITEMS.map((item) => (
-            <a
-              key={item.key}
-              href={item.navigate || `#${item.key}`}
-              className={`group text-[13px] font-semibold uppercase tracking-[0.1em] no-underline pb-1 relative transition-colors duration-200 ${
-                item.highlight ? 'text-[#e63946]' : 'text-primary'
-              }`}
-            >
-              {item.label}
-              <span
-                className={`absolute bottom-0 left-0 h-[1.5px] w-0 group-hover:w-full transition-all duration-300 ${
-                  item.highlight ? 'bg-[#e63946]' : 'bg-primary'
+          {NAV_ITEMS.map((item) =>
+            item.navigate ? (
+              <Link
+                key={item.key}
+                to={item.navigate}
+                className={`group text-[13px] font-semibold uppercase tracking-[0.1em] no-underline pb-1 relative transition-colors duration-200 ${
+                  item.highlight ? 'text-[#e63946]' : 'text-primary'
                 }`}
-              />
-            </a>
-          ))}
+              >
+                {item.label}
+                <span
+                  className={`absolute bottom-0 left-0 h-[1.5px] w-0 group-hover:w-full transition-all duration-300 ${
+                    item.highlight ? 'bg-[#e63946]' : 'bg-primary'
+                  }`}
+                />
+              </Link>
+            ) : (
+              <a
+                key={item.key}
+                href={`#${item.key}`}
+                className={`group text-[13px] font-semibold uppercase tracking-[0.1em] no-underline pb-1 relative transition-colors duration-200 ${
+                  item.highlight ? 'text-[#e63946]' : 'text-primary'
+                }`}
+              >
+                {item.label}
+                <span
+                  className={`absolute bottom-0 left-0 h-[1.5px] w-0 group-hover:w-full transition-all duration-300 ${
+                    item.highlight ? 'bg-[#e63946]' : 'bg-primary'
+                  }`}
+                />
+              </a>
+            )
+          )}
         </nav>
 
         {/* ── Actions ── */}
@@ -204,18 +221,31 @@ const MainHeader = () => {
         width={280}
       >
         <nav className="flex flex-col py-2">
-          {NAV_ITEMS.map((item) => (
-            <a
-              key={item.key}
-              href={`#${item.key}`}
-              className={`block py-3.5 text-[15px] font-semibold uppercase tracking-[0.08em] border-b border-[#f0f0f0] no-underline transition-colors duration-200 hover:text-[#555] ${
-                item.highlight ? 'text-[#e63946]' : 'text-primary'
-              }`}
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              {item.label}
-            </a>
-          ))}
+          {NAV_ITEMS.map((item) =>
+            item.navigate ? (
+              <Link
+                key={item.key}
+                to={item.navigate}
+                className={`block py-3.5 text-[15px] font-semibold uppercase tracking-[0.08em] border-b border-[#f0f0f0] no-underline transition-colors duration-200 hover:text-[#555] ${
+                  item.highlight ? 'text-[#e63946]' : 'text-primary'
+                }`}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {item.label}
+              </Link>
+            ) : (
+              <a
+                key={item.key}
+                href={`#${item.key}`}
+                className={`block py-3.5 text-[15px] font-semibold uppercase tracking-[0.08em] border-b border-[#f0f0f0] no-underline transition-colors duration-200 hover:text-[#555] ${
+                  item.highlight ? 'text-[#e63946]' : 'text-primary'
+                }`}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {item.label}
+              </a>
+            )
+          )}
           <div className="h-4" />
           {isLoggedIn ? (
             <>
