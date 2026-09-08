@@ -81,8 +81,8 @@ const COLORS = [
 
 const SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
 
-const FilterSidebar = ({ filters, onChange, onReset }) => {
-  const { categories, priceRange, sizes, colors, rating } = filters;
+const FilterSidebar = ({ filters, onChange, onReset, hideCategoryFilter = false }) => {
+  const { categories = [], priceRange, sizes, colors, rating } = filters;
 
   const toggleCategory = (cat) => {
     const next = categories.includes(cat)
@@ -120,25 +120,27 @@ const FilterSidebar = ({ filters, onChange, onReset }) => {
         </button>
       </div>
 
-      {/* Danh Mục */}
-      <Section title="Danh Mục">
-        <div className="flex flex-col gap-2">
-          {[
-            { key: 'men',    label: 'Nam' },
-            { key: 'women',  label: 'Nữ' },
-            { key: 'unisex', label: 'Unisex' },
-          ].map(({ key, label }) => (
-            <Checkbox
-              key={key}
-              checked={categories.includes(key)}
-              onChange={() => toggleCategory(key)}
-              className="text-[13px] text-[#444]"
-            >
-              {label}
-            </Checkbox>
-          ))}
-        </div>
-      </Section>
+      {/* Danh Mục — ẩn khi đã fix gender ở cấp trang */}
+      {!hideCategoryFilter && (
+        <Section title="Danh Mục">
+          <div className="flex flex-col gap-2">
+            {[
+              { key: 'men',    label: 'Nam' },
+              { key: 'women',  label: 'Nữ' },
+              { key: 'unisex', label: 'Unisex' },
+            ].map(({ key, label }) => (
+              <Checkbox
+                key={key}
+                checked={categories.includes(key)}
+                onChange={() => toggleCategory(key)}
+                className="text-[13px] text-[#444]"
+              >
+                {label}
+              </Checkbox>
+            ))}
+          </div>
+        </Section>
+      )}
 
       {/* Giá */}
       <Section title="Khoảng Giá">

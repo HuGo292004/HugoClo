@@ -1,29 +1,30 @@
 // ============================================================
-// ProductsPage — Banner + Sidebar Filters + Product Grid + Pagination
-// (Kết nối API thực thay vì dữ liệu tĩnh)
+// GenderedProductsPage — Trang sản phẩm lọc theo giới tính
+// Dùng chung cho Nam (/men) và Nữ (/women)
 // ============================================================
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { HomeOutlined, LeftOutlined, RightOutlined, SearchOutlined, LoadingOutlined, WarningOutlined } from '@ant-design/icons';
-import { Spin } from 'antd';
+import {
+  HomeOutlined, LeftOutlined, RightOutlined,
+  SearchOutlined, WarningOutlined,
+} from '@ant-design/icons';
 import { fetchProducts } from '../../api/productService';
-import ProductCard   from './components/ProductCard';
-import FilterSidebar from './components/FilterSidebar';
-import FilterSortBar from './components/FilterSortBar';
+import ProductCard         from './components/ProductCard';
+import FilterSidebar       from './components/FilterSidebar';
+import GenderFilterSortBar from './components/GenderFilterSortBar';
 
 const PER_PAGE_OPTIONS = [12, 24, 48];
 
-// ── Default filter state ──
+// ── Default filter state (không có categories vì gender đã fix) ──
 const defaultFilters = {
-  categories: [],
-  priceRange:  [0, 2000000],
-  sizes:       [],
-  colors:      [],
-  rating:      null,
+  priceRange: [0, 2000000],
+  sizes:      [],
+  colors:     [],
+  rating:     null,
 };
 
-// ── Pagination component ──
+// ── Pagination ──
 const Pagination = ({ page, totalPages, onChange }) => {
   const pages = [];
   for (let i = 1; i <= Math.min(totalPages, 13); i++) pages.push(i);
@@ -91,7 +92,7 @@ const SkeletonCard = () => (
   </div>
 );
 
-// ── Normalize product từ API để khớp ProductCard ──────────────
+// ── Normalize product ──
 const normalizeProduct = (p) => ({
   ...p,
   id:            p._id,
@@ -100,8 +101,26 @@ const normalizeProduct = (p) => ({
   originalPrice: p.originalPrice || null,
 });
 
-// ── Main page ──
-const ProductsPage = () => {
+// ── Config theo giới tính ──
+const GENDER_CONFIG = {
+  men: {
+    gender:      'men',
+    title:       'Thời Trang Nam',
+    breadcrumb:  'Thời Trang Nam',
+    accentColor: '#000000ff',
+  },
+  women: {
+    gender:      'women',
+    title:       'Thời Trang Nữ',
+    breadcrumb:  'Thời Trang Nữ',
+    accentColor: '#000000ff',
+  },
+};
+
+// ── Main component ──
+const GenderedProductsPage = ({ genderKey }) => {
+  const config = GENDER_CONFIG[genderKey];
+
   const [filters,     setFilters]    = useState(defaultFilters);
   const [quickFilter, setQuickFilter]= useState('all');
   const [sortBy,      setSortBy]     = useState('newest');
@@ -109,45 +128,35 @@ const ProductsPage = () => {
   const [page,        setPage]       = useState(1);
   const [perPage,     setPerPage]    = useState(12);
 
-  // API state
-  const [products,    setProducts]   = useState([]);
-  const [total,       setTotal]      = useState(0);
-  const [totalPages,  setTotalPages] = useState(1);
-  const [loading,     setLoading]    = useState(true);
-  const [error,       setError]      = useState(null);
+  const [products,   setProducts]   = useState([]);
+  const [total,      setTotal]      = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading,    setLoading]    = useState(true);
+  const [error,      setError]      = useState(null);
 
-  // Build query params từ filters + sort + page
   const buildParams = useCallback(() => {
     const params = {
       page,
-      limit: perPage,
-      sort:  sortBy,
+      limit:    perPage,
+      sort:     sortBy,
+      category: config.gender, // luon filter theo gioi tinh
     };
 
-    // Quick filter
-    if (quickFilter === 'sale')      params.isOnSale     = true;
-    if (quickFilter === 'men')       params.category     = 'men';
-    if (quickFilter === 'women')     params.category     = 'women';
-    if (quickFilter === 'tops')      params.productType  = 'tops';
-    if (quickFilter === 'bottoms')   params.productType  = 'bottoms';
-    if (quickFilter === 'shoes')     params.productType  = 'shoes';
-    if (quickFilter === 'accessory') params.productType  = 'accessory';
+    if (quickFilter === 'sale')      params.isOnSale    = true;
+    if (quickFilter === 'tops')      params.productType = 'tops';
+    if (quickFilter === 'bottoms')   params.productType = 'bottoms';
+    if (quickFilter === 'shoes')     params.productType = 'shoes';
+    if (quickFilter === 'accessory') params.productType = 'accessory';
 
-    // Sidebar filters
-    // Danh mục (gender) — hỗ trợ nhiều lựa chọn
-    if (filters.categories.length > 0) params.genders = filters.categories.join(',');
     if (filters.priceRange[0] > 0)       params.minPrice  = filters.priceRange[0];
     if (filters.priceRange[1] < 2000000) params.maxPrice  = filters.priceRange[1];
-    if (filters.rating)                  params.minRating  = filters.rating;
-    // Kích thước — hỗ trợ nhiều lựa chọn
-    if (filters.sizes.length > 0)        params.sizes      = filters.sizes.join(',');
-    // Màu sắc — gửi hex codes
-    if (filters.colors.length > 0)       params.colors     = filters.colors.join(',');
+    if (filters.rating)                  params.minRating = filters.rating;
+    if (filters.sizes.length > 0)        params.sizes     = filters.sizes.join(',');
+    if (filters.colors.length > 0)       params.colors    = filters.colors.join(',');
 
     return params;
-  }, [page, perPage, sortBy, quickFilter, filters]);
+  }, [page, perPage, sortBy, quickFilter, filters, config.gender]);
 
-  // Fetch khi params thay đổi
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
@@ -171,6 +180,13 @@ const ProductsPage = () => {
     return () => { cancelled = true; };
   }, [buildParams]);
 
+  // Reset page khi đổi gender
+  useEffect(() => {
+    setPage(1);
+    setFilters(defaultFilters);
+    setQuickFilter('all');
+  }, [genderKey]);
+
   const handleFilterChange = (partial) =>
     setFilters((prev) => ({ ...prev, ...partial }));
 
@@ -192,44 +208,48 @@ const ProductsPage = () => {
               <span>Trang Chủ</span>
             </Link>
             <span className="text-[#ccc]">/</span>
-            <span className="font-semibold text-[#1a1a1a]">Tất Cả Sản Phẩm</span>
+            <span className="font-semibold text-[#1a1a1a]">{config.breadcrumb}</span>
           </nav>
         </div>
       </div>
 
-      {/* ── Filter + Sort sticky bar ── */}
-      <FilterSortBar
-        activeQuick={quickFilter}   onQuickChange={(k) => { setQuickFilter(k); setPage(1); }}
-        sortBy={sortBy}             onSortChange={(v) => { setSortBy(v); setPage(1); }}
-        gridCols={gridCols}         onGridChange={setGridCols}
+      {/* ── Filter + Sort bar ── */}
+      <GenderFilterSortBar
+        activeQuick={quickFilter}
+        onQuickChange={(k) => { setQuickFilter(k); setPage(1); }}
+        sortBy={sortBy}
+        onSortChange={(v) => { setSortBy(v); setPage(1); }}
+        gridCols={gridCols}
+        onGridChange={setGridCols}
         total={total}
         page={page}
         perPage={perPage}
+        accentColor={config.accentColor}
       />
 
-      {/* ── Main content area ── */}
+      {/* ── Main content ── */}
       <div className="max-w-[1320px] mx-auto px-6 py-8">
         <div className="flex gap-8 items-start">
 
-          {/* Left sidebar */}
+          {/* Sidebar */}
           <div className="hidden lg:block sticky top-[164px] self-start">
             <div className="bg-white rounded-2xl border border-[#ebebeb] p-6 w-[220px]">
               <FilterSidebar
-                filters={filters}
+                filters={{ ...filters, categories: [] }}
                 onChange={handleFilterChange}
                 onReset={handleResetFilters}
+                hideCategoryFilter
               />
             </div>
           </div>
 
-          {/* Product grid */}
+          {/* Grid */}
           <div className="flex-1 min-w-0">
 
-            {/* Error state */}
             {error && !loading && (
               <div className="flex flex-col items-center justify-center py-20 text-center">
-                <WarningOutlined style={{ fontSize: '58px', marginBottom: '16px' }} />
-                <h3 className="text-[20px] font-bold text-[#1a1a1a] mb-3">Không tìm thấy sản phẩm</h3>
+                <WarningOutlined style={{ fontSize: '58px', marginBottom: '16px', color: '#ccc' }} />
+                <h3 className="text-[20px] font-bold text-[#1a1a1a] mb-3">Không thể tải sản phẩm</h3>
                 <button
                   onClick={() => setError(null)}
                   className="h-10 px-6 bg-[#1a1a1a] text-white text-[13px] font-semibold rounded-lg border-none cursor-pointer hover:bg-[#333]"
@@ -239,12 +259,9 @@ const ProductsPage = () => {
               </div>
             )}
 
-            {/* Loading skeleton */}
             {loading && (
               <div className={`grid gap-5 ${
-                gridCols === 4
-                  ? 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4'
-                  : 'grid-cols-2 md:grid-cols-3'
+                gridCols === 4 ? 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4' : 'grid-cols-2 md:grid-cols-3'
               }`}>
                 {Array.from({ length: perPage > 12 ? 12 : perPage }).map((_, i) => (
                   <SkeletonCard key={i} />
@@ -252,10 +269,9 @@ const ProductsPage = () => {
               </div>
             )}
 
-            {/* Empty state */}
             {!loading && !error && products.length === 0 && (
               <div className="flex flex-col items-center justify-center py-24 text-center">
-                <div className="text-6xl mb-4"><SearchOutlined /></div>
+                <div className="text-6xl mb-4 text-[#ddd]"><SearchOutlined /></div>
                 <h3 className="text-[20px] font-bold text-[#1a1a1a] mb-2">Không tìm thấy sản phẩm</h3>
                 <p className="text-[#888] mb-6">Thử thay đổi bộ lọc để xem thêm sản phẩm</p>
                 <button
@@ -267,12 +283,9 @@ const ProductsPage = () => {
               </div>
             )}
 
-            {/* Product grid */}
             {!loading && !error && products.length > 0 && (
               <div className={`grid gap-5 ${
-                gridCols === 4
-                  ? 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4'
-                  : 'grid-cols-2 md:grid-cols-3'
+                gridCols === 4 ? 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4' : 'grid-cols-2 md:grid-cols-3'
               }`}>
                 {products.map((product) => (
                   <ProductCard key={product._id} product={product} />
@@ -280,7 +293,6 @@ const ProductsPage = () => {
               </div>
             )}
 
-            {/* Pagination */}
             {!loading && !error && products.length > 0 && (
               <div className="mt-4 border-t border-[#ebebeb]">
                 <div className="flex items-center justify-between pt-4">
@@ -301,16 +313,10 @@ const ProductsPage = () => {
                     ))}
                     <span>/ trang</span>
                   </div>
-
-                  <Pagination
-                    page={page}
-                    totalPages={totalPages}
-                    onChange={setPage}
-                  />
+                  <Pagination page={page} totalPages={totalPages} onChange={setPage} />
                 </div>
               </div>
             )}
-
           </div>
         </div>
       </div>
@@ -318,4 +324,4 @@ const ProductsPage = () => {
   );
 };
 
-export default ProductsPage;
+export default GenderedProductsPage;
