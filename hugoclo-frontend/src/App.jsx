@@ -12,6 +12,7 @@ import HomePage from './pages/HomePage/HomePage';
 import AuthPage from './pages/AuthPage/AuthPage';
 import ProductsPage from './pages/ProductsPage/ProductsPage';
 import ProductDetailPage from './pages/ProductDetailPage/ProductDetailPage';
+import CartPage from './pages/CartPage/CartPage';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import './index.css';
@@ -73,6 +74,16 @@ function App() {
               element={
                 <MainLayout>
                   <ProductDetailPage />
+                </MainLayout>
+              }
+            />
+
+            {/* Cart */}
+            <Route
+              path="/cart"
+              element={
+                <MainLayout>
+                  <CartPage />
                 </MainLayout>
               }
             />

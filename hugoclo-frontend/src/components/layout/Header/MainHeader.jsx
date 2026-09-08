@@ -139,11 +139,13 @@ const MainHeader = () => {
           </IconBtn>
 
           {/* Cart */}
-          <IconBtn aria="Giỏ hàng">
-            <Badge count={isLoggedIn ? cartCount : 0} size="small" color="#1a1a1a" offset={[2, -2]}>
-              <ShoppingCartOutlined className="text-[18px]" />
-            </Badge>
-          </IconBtn>
+          <Link to="/cart" className="no-underline">
+            <IconBtn aria="Giỏ hàng">
+              <Badge count={isLoggedIn ? cartCount : 0} size="small" color="#1a1a1a" offset={[2, -2]}>
+                <ShoppingCartOutlined className="text-[18px]" />
+              </Badge>
+            </IconBtn>
+          </Link>
 
           {/* Auth */}
           {isLoggedIn ? (

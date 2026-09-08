@@ -16,4 +16,21 @@ api.interceptors.request.use((config) => {
     return config;
 });
 
-export default api;
+// Xử lý token hết hạn / không hợp lệ → tự động đăng xuất
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response?.status === 401) {
+            // Token hết hạn hoặc không hợp lệ
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            // Chuyển về trang login nếu chưa ở đó
+            if (window.location.pathname !== "/auth") {
+                window.location.href = "/auth";
+            }
+        }
+        return Promise.reject(error);
+    }
+);
+
+export default api;
