@@ -4,6 +4,7 @@
 
 const Product  = require("../models/Product");
 const Review   = require("../models/Review");
+const Category = require("../models/Category");
 
 
 /* ── Tạo sản phẩm (kèm upload ảnh Cloudinary) ────────────── */
@@ -48,20 +49,26 @@ const getProducts = async (req, res) => {
     // ── Lọc gender ────────────────────────────────────────────
     // ?category=men  (quick filter — single)
     // ?gender=men    (legacy)
-    // ?genders=men,women,unisex  (sidebar — multi)
     const GENDERS = ["men", "women", "unisex"];
 
-    if (req.query.genders) {
-      const gList = req.query.genders.split(",").filter((g) => GENDERS.includes(g));
-      if (gList.length === 1) filter.gender = gList[0];
-      else if (gList.length > 1) filter.gender = { $in: gList };
-    } else if (req.query.category && GENDERS.includes(req.query.category)) {
+    if (req.query.category && GENDERS.includes(req.query.category)) {
       filter.gender = req.query.category;
     } else if (req.query.gender && GENDERS.includes(req.query.gender)) {
       filter.gender = req.query.gender;
     } else if (req.query.category) {
       // ObjectId
       filter.category = req.query.category;
+    }
+
+    // ── Lọc theo tên danh mục (Áo, Quần, Giày, Phụ kiện) ────────
+    // ?productTypes=tops,bottoms  (sidebar — multi)
+    if (req.query.productTypes) {
+      const typeList = req.query.productTypes.split(",").map((t) => t.trim()).filter(Boolean);
+      if (typeList.length === 1) filter.productType = typeList[0];
+      else if (typeList.length > 1) filter.productType = { $in: typeList };
+    } else if (req.query.productType) {
+      // single (quick filter)
+      filter.productType = req.query.productType;
     }
 
     // ── Lọc sale ──────────────────────────────────────────────
@@ -97,11 +104,6 @@ const getProducts = async (req, res) => {
     if (req.query.colors) {
       const hexList = req.query.colors.split(",");
       filter["colors.code"] = { $in: hexList };
-    }
-
-    // ── Lọc loại sản phẩm ─────────────────────────────────────
-    if (req.query.productType) {
-      filter.productType = req.query.productType;
     }
 
     // ── Build sort ────────────────────────────────────────────

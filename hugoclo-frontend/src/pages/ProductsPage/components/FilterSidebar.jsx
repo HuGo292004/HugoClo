@@ -125,9 +125,10 @@ const FilterSidebar = ({ filters, onChange, onReset, hideCategoryFilter = false 
         <Section title="Danh Mục">
           <div className="flex flex-col gap-2">
             {[
-              { key: 'men',    label: 'Nam' },
-              { key: 'women',  label: 'Nữ' },
-              { key: 'unisex', label: 'Unisex' },
+              { key: 'Áo',         label: 'Áo' },
+              { key: 'Quần',       label: 'Quần' },
+              { key: 'Giày',       label: 'Giày' },
+              { key: 'Phụ kiện',   label: 'Phụ kiện' },
             ].map(({ key, label }) => (
               <Checkbox
                 key={key}
