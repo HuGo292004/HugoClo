@@ -1,21 +1,10 @@
 // ============================================================
-// FilterSortBar — Quick filter chips, sort dropdown, grid-view toggle
+// FilterSortBar — Sort dropdown + grid-view toggle
 // ============================================================
 
 import React from 'react';
 import { Select } from 'antd';
 import { AppstoreOutlined, BorderOutlined } from '@ant-design/icons';
-
-const QUICK_FILTERS = [
-  { key: 'all',        label: 'Tất Cả' },
-  { key: 'men',        label: 'Nam' },
-  { key: 'women',      label: 'Nữ' },
-  { key: 'unisex', label: 'Unisex'},
-  { key: 'tops',       label: 'Áo' },
-  { key: 'bottoms',    label: 'Quần' },
-  { key: 'accessory',  label: 'Phụ Kiện' },
-  { key: 'sale',       label: ' Sale' },
-];
 
 const SORT_OPTIONS = [
   { value: 'newest',      label: 'Mới Nhất' },
@@ -26,39 +15,20 @@ const SORT_OPTIONS = [
 ];
 
 const FilterSortBar = ({
-  activeQuick, onQuickChange,
   sortBy, onSortChange,
   gridCols, onGridChange,
   total, page, perPage,
 }) => {
-  const start = (page - 1) * perPage + 1;
+  const start = total === 0 ? 0 : (page - 1) * perPage + 1;
   const end   = Math.min(page * perPage, total);
 
   return (
     <div className="sticky top-[108px] z-[99] bg-white border-b border-[#e8e8e8] shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
-      <div className="max-w-[1320px] mx-auto px-6 py-3 flex items-center justify-between gap-4">
+      <div className="max-w-[1320px] mx-auto px-6 py-3 flex items-center justify-end gap-4">
 
-        {/* Left — quick filter chips */}
-        <div className="flex items-center gap-2 flex-wrap">
-          {QUICK_FILTERS.map(({ key, label }) => (
-            <button
-              key={key}
-              onClick={() => onQuickChange(key)}
-              className={`h-8 px-4 text-[12px] font-semibold rounded-full border cursor-pointer transition-all duration-200 whitespace-nowrap ${
-                activeQuick === key
-                  ? 'bg-[#1a1a1a] text-white border-[#1a1a1a]'
-                  : 'bg-white text-[#555] border-[#e0e0e0] hover:border-[#1a1a1a] hover:text-[#1a1a1a]'
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-
-        {/* Right — sort + grid toggle + count */}
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-3">
           {/* Result count */}
-          <span className="text-[12px] text-[#999] whitespace-nowrap hidden lg:block">
+          <span className="text-[14px] text-[#999] whitespace-nowrap hidden lg:block">
             {start}–{end} / {total} sản phẩm
           </span>
 
@@ -68,7 +38,7 @@ const FilterSortBar = ({
             onChange={onSortChange}
             options={SORT_OPTIONS}
             size="small"
-            style={{ width: 150, fontSize: 12 }}
+            style={{ width: 180, fontSize: 14 }}
             variant="outlined"
           />
 
@@ -76,7 +46,7 @@ const FilterSortBar = ({
           <div className="flex items-center border border-[#e0e0e0] rounded-lg overflow-hidden">
             <button
               onClick={() => onGridChange(4)}
-              className={`w-8 h-8 flex items-center justify-center text-[14px] border-none cursor-pointer transition-colors ${
+              className={`w-8 h-8 flex items-center justify-center text-[16px] border-none cursor-pointer transition-colors ${
                 gridCols === 4 ? 'bg-[#1a1a1a] text-white' : 'bg-white text-[#888] hover:bg-[#f5f5f5]'
               }`}
               title="4 cột"
@@ -85,7 +55,7 @@ const FilterSortBar = ({
             </button>
             <button
               onClick={() => onGridChange(3)}
-              className={`w-8 h-8 flex items-center justify-center text-[14px] border-none cursor-pointer transition-colors border-l border-[#e0e0e0] ${
+              className={`w-8 h-8 flex items-center justify-center text-[16px] border-none cursor-pointer transition-colors border-l border-[#e0e0e0] ${
                 gridCols === 3 ? 'bg-[#1a1a1a] text-white' : 'bg-white text-[#888] hover:bg-[#f5f5f5]'
               }`}
               title="3 cột"

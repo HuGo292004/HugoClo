@@ -255,7 +255,7 @@ const ProductDetailPage = () => {
 
               {/* Sale badge */}
               {product.isOnSale && discount > 0 && (
-                <div className="absolute top-4 left-4 z-10 bg-[#1a1a1a] text-[#d4af37] text-[11px] font-black tracking-[0.1em] px-3 py-1.5 rounded-full flex items-center gap-1 shadow-lg">
+                <div className="absolute top-4 left-4 z-10 bg-[#e63946] text-[#ffffff] text-[11px] font-black tracking-[0.1em] px-3 py-1.5 rounded-full flex items-center gap-1 shadow-lg">
                   SALE -{discount}%
                 </div>
               )}

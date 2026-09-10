@@ -3,7 +3,7 @@
 // ============================================================
 
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { HeartOutlined, HeartFilled, EyeOutlined, ShoppingCartOutlined } from '@ant-design/icons';
 import { message } from 'antd';
 import { formatPrice } from '../../../data/products';
@@ -26,7 +26,7 @@ const ProductCard = ({ product }) => {
   const [wished, setWished]   = useState(false);
   const [hovered, setHovered] = useState(false);
   const { addToCart }        = useCart();
-
+  const navigate = useNavigate();
   const discount = product.originalPrice
     ? Math.round((1 - product.price / product.originalPrice) * 100)
     : 0;
@@ -35,7 +35,7 @@ const ProductCard = ({ product }) => {
     e.stopPropagation();
     addToCart(product, 1);
   };
-
+  
   const handleWish = (e) => {
     e.stopPropagation();
     setWished((w) => !w);
@@ -44,6 +44,7 @@ const ProductCard = ({ product }) => {
 
   return (
     <div
+      onClick={() => navigate(`/products/${product.id}`)}
       className="group bg-white rounded-xl overflow-hidden border border-[#f0f0f0] hover:border-[#d0d0d0] transition-all duration-300 hover:shadow-[0_8px_32px_rgba(0,0,0,0.10)] cursor-pointer flex flex-col"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}

@@ -15,6 +15,7 @@ import {
   TagOutlined,
   CheckCircleFilled,
   SafetyOutlined,
+  GiftFilled,
 } from '@ant-design/icons';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
@@ -397,7 +398,7 @@ const CartPage = () => {
                   {/* Shipping notice */}
                   {subtotal < 500000 && !isFreeShip && (
                     <p className="text-[11px] text-[#2d6a4f] bg-[#f0faf4] rounded-lg px-3 py-2 m-0 border border-[#c8e6c9]">
-                      🎁 Thêm <strong>{formatPrice(500000 - subtotal)}</strong> để được miễn phí vận chuyển!
+                      <GiftFilled /> Thêm <strong>{formatPrice(500000 - subtotal)}</strong> để được miễn phí vận chuyển!
                     </p>
                   )}
 

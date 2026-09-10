@@ -103,7 +103,6 @@ const normalizeProduct = (p) => ({
 // ── Main page ──
 const ProductsPage = () => {
   const [filters,     setFilters]    = useState(defaultFilters);
-  const [quickFilter, setQuickFilter]= useState('all');
   const [sortBy,      setSortBy]     = useState('newest');
   const [gridCols,    setGridCols]   = useState(4);
   const [page,        setPage]       = useState(1);
@@ -124,28 +123,21 @@ const ProductsPage = () => {
       sort:  sortBy,
     };
 
-    // Quick filter
-    if (quickFilter === 'sale')      params.isOnSale     = true;
-    if (quickFilter === 'men')       params.category     = 'men';
-    if (quickFilter === 'women')     params.category     = 'women';
-    if (quickFilter === 'tops')      params.productType  = 'tops';
-    if (quickFilter === 'bottoms')   params.productType  = 'bottoms';
-    if (quickFilter === 'shoes')     params.productType  = 'shoes';
-    if (quickFilter === 'accessory') params.productType  = 'accessory';
-
     // Sidebar filters
-    // Danh mục (gender) — hỗ trợ nhiều lựa chọn
-    if (filters.categories.length > 0) params.genders = filters.categories.join(',');
+    // Danh mục — map tên hiển thị → productType trong DB
+    const CATEGORY_TO_TYPE = { 'Áo': 'tops', 'Quần': 'bottoms', 'Giày': 'shoes', 'Phụ kiện': 'accessory' };
+    if (filters.categories.length > 0) {
+      const types = filters.categories.map((c) => CATEGORY_TO_TYPE[c] || c).filter(Boolean);
+      if (types.length > 0) params.productTypes = types.join(',');
+    }
     if (filters.priceRange[0] > 0)       params.minPrice  = filters.priceRange[0];
     if (filters.priceRange[1] < 2000000) params.maxPrice  = filters.priceRange[1];
     if (filters.rating)                  params.minRating  = filters.rating;
-    // Kích thước — hỗ trợ nhiều lựa chọn
     if (filters.sizes.length > 0)        params.sizes      = filters.sizes.join(',');
-    // Màu sắc — gửi hex codes
     if (filters.colors.length > 0)       params.colors     = filters.colors.join(',');
 
     return params;
-  }, [page, perPage, sortBy, quickFilter, filters]);
+  }, [page, perPage, sortBy, filters]);
 
   // Fetch khi params thay đổi
   useEffect(() => {
@@ -176,7 +168,6 @@ const ProductsPage = () => {
 
   const handleResetFilters = () => {
     setFilters(defaultFilters);
-    setQuickFilter('all');
     setPage(1);
   };
 
@@ -199,7 +190,6 @@ const ProductsPage = () => {
 
       {/* ── Filter + Sort sticky bar ── */}
       <FilterSortBar
-        activeQuick={quickFilter}   onQuickChange={(k) => { setQuickFilter(k); setPage(1); }}
         sortBy={sortBy}             onSortChange={(v) => { setSortBy(v); setPage(1); }}
         gridCols={gridCols}         onGridChange={setGridCols}
         total={total}
