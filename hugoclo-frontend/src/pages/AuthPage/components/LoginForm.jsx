@@ -39,8 +39,14 @@ const LoginForm = ({ onSwitchToRegister }) => {
     try {
       const { user } = await login({ email, password });
       message.success(`Chào mừng trở lại, ${user.fullName}`);
-      const redirectUrl = localStorage.getItem('redirect_after_login') || '/';
-      navigate(redirectUrl);
+      // Admin → dashboard riêng
+      if (user.role === 'admin') {
+        navigate('/admin');
+      } else {
+        const redirectUrl = localStorage.getItem('redirect_after_login') || '/';
+        localStorage.removeItem('redirect_after_login');
+        navigate(redirectUrl);
+      }
     } catch (err) {
       const msg = err?.response?.data?.message || 'Đăng nhập thất bại. Vui lòng thử lại.';
       message.error(msg);

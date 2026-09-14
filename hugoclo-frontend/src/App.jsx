@@ -17,6 +17,9 @@ import MenPage from './pages/MenPage/MenPage';
 import WomenPage from './pages/WomenPage/WomenPage';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
+import AdminDashboard from './pages/AdminPage/AdminDashboard';
+import AdminProductsPage from './pages/AdminPage/AdminProductsPage';
+import PrivateAdminRoute from './components/PrivateAdminRoute';
 import './index.css';
 
 const antdTheme = {
@@ -107,6 +110,26 @@ function App() {
                 <MainLayout>
                   <CartPage />
                 </MainLayout>
+              }
+            />
+
+            {/* Admin — riêng biệt, không dùng MainLayout */}
+            <Route
+              path="/admin"
+              element={
+                <PrivateAdminRoute>
+                  <AdminDashboard />
+                </PrivateAdminRoute>
+              }
+            />
+
+            {/* Admin Products */}
+            <Route
+              path="/admin/products"
+              element={
+                <PrivateAdminRoute>
+                  <AdminProductsPage />
+                </PrivateAdminRoute>
               }
             />
 
