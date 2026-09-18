@@ -165,11 +165,9 @@ const CartItemRow = ({ item, onQtyChange, onRemove, busy }) => {
 /* ─── Payment Method Icons ──────────────────────────────────── */
 const PaymentBadges = () => {
   const methods = [
-    { name: 'Visa',       bg: '#1A1F71', text: '#fff',    label: 'VISA' },
-    { name: 'Mastercard', bg: '#EB001B', text: '#fff',    label: 'MC' },
     { name: 'MoMo',       bg: '#A50064', text: '#fff',    label: 'MoMo' },
-    { name: 'ZaloPay',    bg: '#0068FF', text: '#fff',    label: 'Zalo' },
-    { name: 'COD',        bg: '#f5f5f5', text: '#1a1a1a', label: 'COD' },
+    { name: 'VNPay',      bg: 'linear-gradient(to right, #e63946, #388af7ff)', text: '#fff', label: 'VNPay' },
+    { name: 'COD',        bg: 'linear-gradient(to right, #1a1a1a, #4a4a4a)', text: '#fff', label: 'COD' },
   ];
   return (
     <div className="flex items-center gap-2 flex-wrap justify-center mt-3">
@@ -177,7 +175,7 @@ const PaymentBadges = () => {
         <div
           key={m.name}
           className="h-6 px-2.5 rounded-md flex items-center justify-center text-[10px] font-bold tracking-wider"
-          style={{ backgroundColor: m.bg, color: m.text }}
+          style={{ background: m.bg, color: m.text }}
         >
           {m.label}
         </div>
@@ -296,11 +294,12 @@ const CartPage = () => {
   /* Checkout */
   const handleCheckout = () => {
     if (!isLoggedIn) {
+      localStorage.setItem('redirect_after_login', '/checkout');
       message.info('Vui lòng đăng nhập để tiến hành thanh toán');
       navigate('/auth');
       return;
     }
-    message.info('Tính năng thanh toán đang được phát triển');
+    navigate('/checkout');
   };
 
   // Normalize items for display (handle both API structure and local fallback)
@@ -397,7 +396,7 @@ const CartPage = () => {
 
                   {/* Shipping notice */}
                   {subtotal < 500000 && !isFreeShip && (
-                    <p className="text-[11px] text-[#2d6a4f] bg-[#f0faf4] rounded-lg px-3 py-2 m-0 border border-[#c8e6c9]">
+                    <p className="text-[12px] text-[#2d6a4f] bg-[#f0faf4] rounded-lg px-3 py-2 m-0 border border-[#c8e6c9]">
                       <GiftFilled /> Thêm <strong>{formatPrice(500000 - subtotal)}</strong> để được miễn phí vận chuyển!
                     </p>
                   )}

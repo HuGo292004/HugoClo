@@ -141,6 +141,11 @@ export const CartProvider = ({ children }) => {
     }
   }, [isLoggedIn, navigate, fetchCart]);
 
+  // ── Xóa toàn bộ giỏ hàng (sau khi đặt hàng thành công) ────────
+  const clearCart = useCallback(() => {
+    setCartItems([]);
+  }, []);
+
   const cartCount = cartItems.reduce((sum, item) => sum + (item.quantity || 1), 0);
 
   return (
@@ -153,6 +158,7 @@ export const CartProvider = ({ children }) => {
         updateQuantity,
         removeFromCart,
         fetchCart,
+        clearCart,
       }}
     >
       {children}

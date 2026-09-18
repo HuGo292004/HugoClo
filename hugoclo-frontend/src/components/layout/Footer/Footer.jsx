@@ -119,7 +119,7 @@ const Footer = () => {
             © {new Date().getFullYear()} HugoClo. Bảo lưu mọi quyền.
           </p>
           <div className="flex gap-2 flex-wrap items-center">
-            {['VISA', 'Mastercard', 'MoMo', 'ZaloPay', 'VNPay'].map((name) => (
+            {['MoMo', 'VNPay'].map((name) => (
               <span
                 key={name}
                 className="bg-white/8 border border-white/15 text-white/60 rounded px-2.5 py-1 text-[11px] font-bold tracking-[0.06em]"

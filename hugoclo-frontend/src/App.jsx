@@ -21,6 +21,9 @@ import AdminDashboard from './pages/AdminPage/AdminDashboard';
 import AdminProductsPage from './pages/AdminPage/AdminProductsPage';
 import PrivateAdminRoute from './components/PrivateAdminRoute';
 import PrivateUserRoute from './components/PrivateUserRoute';
+import CheckoutPage from './pages/CheckoutPage/CheckoutPage';
+import OrderSuccessPage from './pages/OrderSuccessPage/OrderSuccessPage';
+import MyOrdersPage from './pages/MyOrdersPage/MyOrdersPage';
 import './index.css';
 
 const antdTheme = {
@@ -133,6 +136,40 @@ function App() {
                 <PrivateAdminRoute>
                   <AdminProductsPage />
                 </PrivateAdminRoute>
+              }
+            />
+
+            {/* Checkout */}
+            <Route
+              path="/checkout"
+              element={
+                <PrivateUserRoute>
+                  <MainLayout>
+                    <CheckoutPage />
+                  </MainLayout>
+                </PrivateUserRoute>
+              }
+            />
+
+            {/* Order Success */}
+            <Route
+              path="/order-success"
+              element={
+                <MainLayout>
+                  <OrderSuccessPage />
+                </MainLayout>
+              }
+            />
+
+            {/* My Orders */}
+            <Route
+              path="/my-orders"
+              element={
+                <PrivateUserRoute>
+                  <MainLayout>
+                    <MyOrdersPage />
+                  </MainLayout>
+                </PrivateUserRoute>
               }
             />
 
