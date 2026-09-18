@@ -49,7 +49,7 @@ const stockColor = (s) => {
 };
 
 // ── Add/Edit Product Modal ────────────────────────────────────
-const ProductModal = ({ open, onClose, onSaved, editProduct, categories }) => {
+const ProductModal = ({ open, onClose, onSaved, editProduct }) => {
   const [form]    = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [fileList, setFileList] = useState([]);
@@ -57,16 +57,19 @@ const ProductModal = ({ open, onClose, onSaved, editProduct, categories }) => {
   useEffect(() => {
     if (open) {
       if (editProduct) {
+        const originalPrice = editProduct.originalPrice || editProduct.price;
+        const discountPercent = editProduct.originalPrice 
+          ? Math.round((1 - editProduct.price / editProduct.originalPrice) * 100) 
+          : 0;
+
         form.setFieldsValue({
           name:          editProduct.name,
           description:   editProduct.description,
-          price:         editProduct.price,
-          originalPrice: editProduct.originalPrice,
+          basePrice:     originalPrice,
+          discountPercent: discountPercent,
           stock:         editProduct.stock,
           gender:        editProduct.gender,
           productType:   editProduct.productType,
-          isOnSale:      editProduct.isOnSale,
-          category:      editProduct.category?._id || editProduct.category,
           material:      editProduct.material,
         });
       } else {
@@ -81,10 +84,22 @@ const ProductModal = ({ open, onClose, onSaved, editProduct, categories }) => {
       const values = await form.validateFields();
       setLoading(true);
 
+      const { basePrice, discountPercent, ...restValues } = values;
+      
+      let finalPrice = basePrice;
+      let finalOriginalPrice = basePrice;
+
+      if (discountPercent > 0) {
+        finalPrice = Math.round(basePrice * (1 - discountPercent / 100));
+      }
+
       const formData = new FormData();
-      Object.entries(values).forEach(([k, v]) => {
+      Object.entries(restValues).forEach(([k, v]) => {
         if (v !== undefined && v !== null) formData.append(k, v);
       });
+      formData.append('price', finalPrice);
+      formData.append('originalPrice', finalOriginalPrice);
+      formData.append('isOnSale', discountPercent > 0);
       fileList.forEach((f) => {
         if (f.originFileObj) formData.append('images', f.originFileObj);
       });
@@ -112,11 +127,11 @@ const ProductModal = ({ open, onClose, onSaved, editProduct, categories }) => {
       open={open}
       onCancel={onClose}
       title={
-        <span className="text-[16px] font-bold text-[#1a1a1a]">
-          {editProduct ? '✏️ Chỉnh Sửa Sản Phẩm' : '➕ Thêm Sản Phẩm Mới'}
+        <span className="text-[18px] font-bold text-[#1a1a1a]">
+          {editProduct ? 'Chỉnh Sửa Sản Phẩm' : 'Thêm Sản Phẩm Mới'}
         </span>
       }
-      width={680}
+      width={850}
       footer={null}
       destroyOnClose
     >
@@ -145,37 +160,43 @@ const ProductModal = ({ open, onClose, onSaved, editProduct, categories }) => {
           </Form.Item>
         </div>
 
-        {/* Category */}
-        {categories.length > 0 && (
-          <Form.Item name="category" label="Danh Mục">
-            <Select placeholder="Chọn danh mục" size="large" allowClear>
-              {categories.map((c) => (
-                <Option key={c._id} value={c._id}>{c.name}</Option>
-              ))}
-            </Select>
-          </Form.Item>
-        )}
+
 
         {/* Price row */}
         <div className="grid grid-cols-3 gap-4">
-          <Form.Item name="price" label="Giá Bán (đ)" rules={[{ required: true, message: 'Nhập giá' }]}>
+          <Form.Item 
+            name="basePrice" 
+            label="Giá Sản Phẩm (đ)" 
+            rules={[
+              { required: true, message: 'Vui lòng nhập giá sản phẩm' },
+              { type: 'number', min: 1000, message: 'Giá phải từ 1,000đ trở lên' }
+            ]}
+          >
             <InputNumber
               min={0} step={1000} size="large"
               formatter={(v) => v?.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
               parser={(v) => v?.replace(/,/g, '')}
-              className="w-full"
+              style={{ width: '100%' }}
             />
           </Form.Item>
-          <Form.Item name="originalPrice" label="Giá Gốc (đ)">
-            <InputNumber
-              min={0} step={1000} size="large"
-              formatter={(v) => v?.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-              parser={(v) => v?.replace(/,/g, '')}
-              className="w-full"
-            />
+          <Form.Item 
+            name="discountPercent" 
+            label="Giảm Giá (%)"
+            rules={[
+              { type: 'number', min: 0, max: 100, message: 'Giảm giá phải từ 0% đến 100%' }
+            ]}
+          >
+            <InputNumber min={0} max={100} size="large" style={{ width: '100%' }} />
           </Form.Item>
-          <Form.Item name="stock" label="Tồn Kho" rules={[{ required: true, message: 'Nhập số lượng' }]}>
-            <InputNumber min={0} size="large" className="w-full" />
+          <Form.Item 
+            name="stock" 
+            label="Tồn Kho" 
+            rules={[
+              { required: true, message: 'Vui lòng nhập số lượng tồn kho' },
+              { type: 'number', min: 0, message: 'Tồn kho không được là số âm' }
+            ]}
+          >
+            <InputNumber min={0} size="large" style={{ width: '100%' }} />
           </Form.Item>
         </div>
 
@@ -215,10 +236,7 @@ const ProductModal = ({ open, onClose, onSaved, editProduct, categories }) => {
           )}
         </Form.Item>
 
-        {/* Sale toggle */}
-        <Form.Item name="isOnSale" label="Đang Giảm Giá" valuePropName="checked">
-          <Switch checkedChildren="Có" unCheckedChildren="Không" />
-        </Form.Item>
+
 
         {/* Footer buttons */}
         <div className="flex justify-end gap-3 pt-2 border-t border-[#f0f0f0] mt-4">
@@ -238,6 +256,110 @@ const ProductModal = ({ open, onClose, onSaved, editProduct, categories }) => {
   );
 };
 
+// ── View Product Modal ───────────────────────────────────────
+const ProductDetailModal = ({ open, onClose, product }) => {
+  const [selectedImage, setSelectedImage] = useState(0);
+
+  useEffect(() => {
+    if (open) setSelectedImage(0);
+  }, [open, product]);
+
+  if (!product) return null;
+
+  return (
+    <Modal
+      open={open}
+      onCancel={onClose}
+      title={<span className="text-[18px] font-bold text-[#1a1a1a]">Chi Tiết Sản Phẩm</span>}
+      width={700}
+      footer={
+        <Button onClick={onClose} size="large">Đóng</Button>
+      }
+    >
+      <div className="flex flex-col md:flex-row gap-6 mt-4">
+        {/* Images */}
+        <div className="w-full md:w-1/2">
+          {product.images && product.images.length > 0 ? (
+            <div className="flex flex-col gap-2">
+              <img src={product.images[selectedImage]} alt={product.name} className="w-full h-80 rounded-xl object-cover border border-[#f0f0f0]" />
+              {product.images.length > 1 && (
+                <div className="flex gap-2 overflow-x-auto pb-2">
+                  {product.images.map((img, idx) => (
+                    <img 
+                      key={idx} 
+                      src={img} 
+                      alt="" 
+                      className={`w-16 h-16 flex-shrink-0 rounded-lg object-cover border cursor-pointer transition-all hover:opacity-100 ${selectedImage === idx ? 'border-blue-500 opacity-100' : 'border-[#f0f0f0] opacity-50'}`}
+                      onClick={() => setSelectedImage(idx)}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="w-full h-80 bg-gray-50 rounded-xl flex items-center justify-center text-gray-400 border border-[#f0f0f0]">
+              Không có hình ảnh
+            </div>
+          )}
+        </div>
+        
+        {/* Details */}
+        <div className="w-full md:w-1/2 flex flex-col gap-4">
+          <div>
+            <h2 className="text-xl font-bold m-0 text-[#1a1a1a]">{product.name}</h2>
+            {/* <p className="text-gray-500 font-mono m-0 text-[13px]">#{product._id}</p> */}
+          </div>
+          
+          <div className="flex gap-2">
+            <Tag color={TYPE_COLOR[product.productType] || 'default'} className="rounded-full">
+              {PRODUCT_TYPE_LABEL[product.productType] || product.productType}
+            </Tag>
+            <Tag color={GENDER_COLOR[product.gender] || 'default'} className="rounded-full">
+              {GENDER_LABEL[product.gender] || product.gender}
+            </Tag>
+            <Tag color={product.isOnSale ? 'orange' : 'success'} className="rounded-full">
+              {product.isOnSale ? 'Sale' : 'Bình thường'}
+            </Tag>
+          </div>
+
+          <div className="bg-gray-50 p-4 rounded-xl flex flex-col gap-2 border border-[#f0f0f0]">
+            <div className="flex justify-between items-center">
+              <span className="text-gray-500 text-[13px]">Giá bán:</span>
+              <span className="font-bold text-[16px] text-red-500">{formatPrice(product.price)}</span>
+            </div>
+            {product.originalPrice && product.isOnSale && (
+              <div className="flex justify-between items-center">
+                <span className="text-gray-500 text-[13px]">Giá gốc:</span>
+                <span className="line-through text-gray-400 text-[13px]">{formatPrice(product.originalPrice)}</span>
+              </div>
+            )}
+            <div className="flex justify-between items-center">
+              <span className="text-gray-500 text-[13px]">Tồn kho:</span>
+              <span className={`font-bold text-[14px] ${stockColor(product.stock)}`}>{product.stock}</span>
+            </div>
+          </div>
+
+          {product.material && (
+            <div>
+              <span className="font-semibold block mb-1 text-[13px] text-gray-800">Chất liệu:</span>
+              <p className="text-gray-600 m-0 text-[13px]">{product.material}</p>
+            </div>
+          )}
+
+          {product.description && (
+            <div>
+              <span className="font-semibold block mb-1 text-[13px] text-gray-800">Mô tả:</span>
+              <p className="text-gray-600 m-0 whitespace-pre-line text-[13px] bg-gray-50 p-3 rounded-lg border border-[#f0f0f0] max-h-32 overflow-y-auto">
+                {product.description}
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    </Modal>
+  );
+};
+
 // ── Main Page ────────────────────────────────────────────────
 const AdminProductsPage = () => {
   const navigate = useNavigate();
@@ -246,7 +368,6 @@ const AdminProductsPage = () => {
   const [products,    setProducts]    = useState([]);
   const [total,       setTotal]       = useState(0);
   const [loading,     setLoading]     = useState(true);
-  const [categories,  setCategories]  = useState([]);
 
   // Filter state
   const [page,        setPage]        = useState(1);
@@ -259,6 +380,9 @@ const AdminProductsPage = () => {
   // Modal state
   const [modalOpen,   setModalOpen]   = useState(false);
   const [editProduct, setEditProduct] = useState(null);
+
+  const [viewModalOpen, setViewModalOpen] = useState(false);
+  const [viewProduct, setViewProduct] = useState(null);
 
   // Selection
   const [selectedKeys, setSelectedKeys] = useState([]);
@@ -284,11 +408,6 @@ const AdminProductsPage = () => {
   }, [page, pageSize, keyword, filterType, filterGender, filterSale]);
 
   useEffect(() => { loadProducts(); }, [loadProducts]);
-
-  // Fetch categories once
-  useEffect(() => {
-    api.get('/categories').then(r => setCategories(r.data || [])).catch(() => {});
-  }, []);
 
   // ── Handlers ───────────────────────────────────────────────
   const handleDelete = async (id) => {
@@ -321,6 +440,9 @@ const AdminProductsPage = () => {
   const openAdd   = ()  => { setEditProduct(null); setModalOpen(true); };
   const openEdit  = (p) => { setEditProduct(p);    setModalOpen(true); };
   const closeModal = () => { setModalOpen(false); setEditProduct(null); };
+
+  const openView = (p) => { setViewProduct(p); setViewModalOpen(true); };
+  const closeViewModal = () => { setViewModalOpen(false); setViewProduct(null); };
 
   // Reset filters
   const handleReset = () => {
@@ -366,7 +488,7 @@ const AdminProductsPage = () => {
           src={imgs?.[0] || 'https://via.placeholder.com/50'}
           alt={r.name}
           className="w-12 h-12 rounded-xl object-cover border border-[#f0f0f0] cursor-pointer hover:opacity-80 transition-opacity"
-          onClick={() => navigate(`/products/${r._id}`)}
+          onClick={() => openView(r)}
         />
       ),
     },
@@ -377,7 +499,7 @@ const AdminProductsPage = () => {
         <div>
           <p
             className="font-semibold text-[13px] text-[#1a1a1a] m-0 leading-tight cursor-pointer hover:text-blue-600 transition-colors"
-            onClick={() => navigate(`/products/${r._id}`)}
+            onClick={() => openView(r)}
           >
             {name}
           </p>
@@ -418,7 +540,7 @@ const AdminProductsPage = () => {
       render: (v, r) => (
         <div>
           <p className="font-bold text-[13px] text-[#1a1a1a] m-0">{formatPrice(v)}</p>
-          {r.originalPrice && (
+          {r.originalPrice && r.isOnSale && (
             <p className="text-[11px] text-[#bbb] m-0 line-through">{formatPrice(r.originalPrice)}</p>
           )}
         </div>
@@ -465,7 +587,7 @@ const AdminProductsPage = () => {
         <Space size={4}>
           <Tooltip title="Xem chi tiết">
             <button
-              onClick={() => navigate(`/products/${r._id}`)}
+              onClick={() => openView(r)}
               className="w-8 h-8 rounded-lg bg-gray-50 text-gray-500 border-none cursor-pointer flex items-center justify-center hover:bg-gray-200 transition-all"
             >
               <EyeOutlined style={{ fontSize: 13 }} />
@@ -667,7 +789,13 @@ const AdminProductsPage = () => {
         onClose={closeModal}
         onSaved={loadProducts}
         editProduct={editProduct}
-        categories={categories}
+      />
+
+      {/* ── View Modal ── */}
+      <ProductDetailModal
+        open={viewModalOpen}
+        onClose={closeViewModal}
+        product={viewProduct}
       />
     </AdminLayout>
   );

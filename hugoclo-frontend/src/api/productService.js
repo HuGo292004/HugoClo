@@ -24,13 +24,13 @@ export const fetchProductById = (id) =>
  * Tạo sản phẩm mới (admin)
  */
 export const createProduct = (data) =>
-  api.post("/products", data).then((res) => res.data);
+  api.post("/products", data, { headers: { "Content-Type": "multipart/form-data" } }).then((res) => res.data);
 
 /**
  * Cập nhật sản phẩm (admin)
  */
 export const updateProduct = (id, data) =>
-  api.put(`/products/${id}`, data).then((res) => res.data);
+  api.put(`/products/${id}`, data, { headers: { "Content-Type": "multipart/form-data" } }).then((res) => res.data);
 
 /**
  * Xóa sản phẩm (admin)

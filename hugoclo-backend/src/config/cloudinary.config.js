@@ -15,7 +15,7 @@ const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
     folder: 'hugoclo_products', // Tên thư mục sẽ tạo trên Cloudinary để chứa ảnh
-    allowed_formats: ['jpg', 'jpeg', 'png', 'webp'], // Các định dạng cho phép
+    allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'avif'], // Các định dạng cho phép
   },
 });
 
