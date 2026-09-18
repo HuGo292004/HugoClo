@@ -54,6 +54,12 @@ const MainHeader = () => {
     },
     { type: 'divider' },
     {
+      key: 'orders',
+      icon: <ShoppingCartOutlined />,
+      label: 'Đơn hàng của tôi',
+      onClick: () => navigate('/my-orders'),
+    },
+    {
       key: 'settings',
       icon: <SettingOutlined />,
       label: 'Cài đặt tài khoản',
