@@ -344,7 +344,7 @@ const ProductDetailPage = () => {
             <div className="bg-[#fafafa] rounded-xl p-4 mb-5 border border-[#f0f0f0]">
               <div className="flex items-baseline gap-3 flex-wrap">
                 <span className="text-[30px] font-black text-[#1a1a1a]">{formatPrice(product.price)}</span>
-                {product.originalPrice && (
+                {product.originalPrice && product.isOnSale && (
                   <span className="text-[18px] text-[#ccc] line-through">{formatPrice(product.originalPrice)}</span>
                 )}
                 {product.isOnSale && discount > 0 && (
