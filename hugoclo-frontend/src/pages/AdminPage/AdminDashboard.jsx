@@ -224,8 +224,8 @@ const AdminDashboard = () => {
 
   return (
     <AdminLayout
-      breadcrumb="Dashboard"
-      title={<span>Chào Buổi Sáng, {user?.fullName?.split(' ').pop() || 'Admin'}! 👋</span>}
+      // breadcrumb="Dashboard"
+      title={<span>Chào Buổi Sáng, {user?.fullName?.split(' ').pop() || 'Admin'}! </span>}
     >
       <div className="flex flex-col gap-5">
         {/* Stats grid */}

@@ -20,6 +20,7 @@ import { CartProvider } from './context/CartContext';
 import AdminDashboard from './pages/AdminPage/AdminDashboard';
 import AdminProductsPage from './pages/AdminPage/AdminProductsPage';
 import PrivateAdminRoute from './components/PrivateAdminRoute';
+import PrivateUserRoute from './components/PrivateUserRoute';
 import './index.css';
 
 const antdTheme = {
@@ -34,13 +35,15 @@ const antdTheme = {
 
 /* ── Layout wrapper for pages that need the full site header/footer ── */
 const MainLayout = ({ children }) => (
-  <div className="min-h-screen flex flex-col">
-    <Header />
-    <main className="flex-1 pt-[108px]" id="main-content" role="main">
-      {children}
-    </main>
-    <Footer />
-  </div>
+  <PrivateUserRoute>
+    <div className="min-h-screen flex flex-col">
+      <Header />
+      <main className="flex-1 pt-[108px]" id="main-content" role="main">
+        {children}
+      </main>
+      <Footer />
+    </div>
+  </PrivateUserRoute>
 );
 
 function App() {
@@ -61,7 +64,7 @@ function App() {
             />
 
             {/* Auth — minimal header, no site nav */}
-            <Route path="/auth" element={<AuthPage />} />
+            <Route path="/auth" element={<PrivateUserRoute><AuthPage /></PrivateUserRoute>} />
 
             {/* Products listing */}
             <Route
