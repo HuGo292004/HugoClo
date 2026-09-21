@@ -110,11 +110,11 @@ const getMyOrders = async (req, res) => {
     const skip = (Number(page) - 1) * Number(limit);
 
     const [orders, total] = await Promise.all([
-      Order.find({ user: req.user.id })
+      Order.find({ user: req.user.id, isArchived: { $ne: true } })
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(Number(limit)),
-      Order.countDocuments({ user: req.user.id }),
+      Order.countDocuments({ user: req.user.id, isArchived: { $ne: true } }),
     ]);
 
     res.json({ orders, total, page: Number(page), totalPages: Math.ceil(total / Number(limit)) });
@@ -197,4 +197,148 @@ const restoreStock = async (items) => {
   );
 };
 
-module.exports = { createOrder, getMyOrders, getOrderById, cancelOrder };
+// ─────────────────────────────────────────────────────────────
+// GET /api/admin/orders
+// [ADMIN] Lấy tất cả đơn hàng với filter, search, phân trang
+// ─────────────────────────────────────────────────────────────
+const getAllOrdersAdmin = async (req, res) => {
+  try {
+    const {
+      page = 1,
+      limit = 20,
+      status,
+      paymentMethod,
+      search,
+      from,
+      to,
+    } = req.query;
+
+    const filter = { isArchived: { $ne: true } };
+
+    // Lọc theo trạng thái đơn
+    if (status && status !== 'all') {
+      filter.orderStatus = status;
+    }
+
+    // Lọc theo phương thức thanh toán
+    if (paymentMethod && paymentMethod !== 'all') {
+      filter.paymentMethod = paymentMethod;
+    }
+
+    // Lọc theo khoảng thời gian
+    if (from || to) {
+      filter.createdAt = {};
+      if (from) filter.createdAt.$gte = new Date(from);
+      if (to)   filter.createdAt.$lte = new Date(to);
+    }
+
+    // Tìm kiếm theo mã đơn hoặc thông tin địa chỉ (tên, SĐT)
+    let orderIds = [];
+    if (search && search.trim()) {
+      const s = search.trim();
+      // Tìm theo _id (nếu search trông giống ObjectId)
+      const isObjectId = /^[a-fA-F0-9]{24}$/.test(s);
+      if (isObjectId) {
+        orderIds.push(s);
+      }
+      // Tìm theo tên người nhận hoặc SĐT
+      const byAddress = await Order.find({
+        $or: [
+          { 'shippingAddress.fullName': { $regex: s, $options: 'i' } },
+          { 'shippingAddress.phone':    { $regex: s, $options: 'i' } },
+        ],
+      }).select('_id');
+      orderIds.push(...byAddress.map((o) => o._id.toString()));
+
+      if (orderIds.length > 0) {
+        filter._id = { $in: orderIds };
+      } else if (!isObjectId) {
+        // Không match gì → trả về rỗng
+        filter._id = { $in: [] };
+      }
+    }
+
+    const skip = (Number(page) - 1) * Number(limit);
+
+    const [orders, total] = await Promise.all([
+      Order.find(filter)
+        .populate('user', 'fullName email phone')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(Number(limit)),
+      Order.countDocuments(filter),
+    ]);
+
+    // Thống kê nhanh
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const [todayOrders, pendingCount, shippingCount, todayRevenue] = await Promise.all([
+      Order.countDocuments({ createdAt: { $gte: today } }),
+      Order.countDocuments({ orderStatus: 'pending' }),
+      Order.countDocuments({ orderStatus: 'shipping' }),
+      Order.aggregate([
+        { $match: { createdAt: { $gte: today }, orderStatus: { $ne: 'cancelled' } } },
+        { $group: { _id: null, total: { $sum: '$totalAmount' } } },
+      ]),
+    ]);
+
+    res.json({
+      orders,
+      total,
+      page:       Number(page),
+      totalPages: Math.ceil(total / Number(limit)),
+      stats: {
+        todayOrders,
+        pendingCount,
+        shippingCount,
+        todayRevenue: todayRevenue[0]?.total || 0,
+      },
+    });
+  } catch (err) {
+    console.error('[getAllOrdersAdmin]', err);
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// ─────────────────────────────────────────────────────────────
+// PUT /api/admin/orders/:id/status
+// [ADMIN] Cập nhật trạng thái đơn hàng
+// ─────────────────────────────────────────────────────────────
+const updateOrderStatus = async (req, res) => {
+  try {
+    const { status } = req.body;
+    const validStatuses = ['pending', 'confirmed', 'shipping', 'delivered', 'cancelled'];
+
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ message: 'Trạng thái không hợp lệ' });
+    }
+
+    const order = await Order.findById(req.params.id);
+    if (!order) return res.status(404).json({ message: 'Đơn hàng không tồn tại' });
+
+    const prevStatus = order.orderStatus;
+    order.orderStatus = status;
+
+    // Nếu xác nhận COD → trừ stock (nếu chưa trừ)
+    if (status === 'confirmed' && prevStatus === 'pending' && order.paymentMethod === 'cod') {
+      await deductStock(order.items);
+    }
+
+    // Nếu hủy đơn COD đã confirmed → hoàn stock
+    if (status === 'cancelled' && prevStatus !== 'cancelled') {
+      if (order.paymentMethod === 'cod' && prevStatus !== 'pending') {
+        await restoreStock(order.items);
+      }
+      order.cancelReason = req.body.cancelReason || 'Admin hủy đơn';
+    }
+
+    await order.save();
+    const updated = await Order.findById(order._id).populate('user', 'fullName email phone');
+    res.json({ success: true, order: updated });
+  } catch (err) {
+    console.error('[updateOrderStatus]', err);
+    res.status(500).json({ message: err.message });
+  }
+};
+
+module.exports = { createOrder, getMyOrders, getOrderById, cancelOrder, getAllOrdersAdmin, updateOrderStatus };
