@@ -19,6 +19,7 @@ import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import AdminDashboard from './pages/AdminPage/AdminDashboard';
 import AdminProductsPage from './pages/AdminPage/AdminProductsPage';
+import AdminOrdersPage from './pages/AdminPage/AdminOrdersPage';
 import PrivateAdminRoute from './components/PrivateAdminRoute';
 import PrivateUserRoute from './components/PrivateUserRoute';
 import CheckoutPage from './pages/CheckoutPage/CheckoutPage';
@@ -135,6 +136,16 @@ function App() {
               element={
                 <PrivateAdminRoute>
                   <AdminProductsPage />
+                </PrivateAdminRoute>
+              }
+            />
+
+            {/* Admin Orders */}
+            <Route
+              path="/admin/orders"
+              element={
+                <PrivateAdminRoute>
+                  <AdminOrdersPage />
                 </PrivateAdminRoute>
               }
             />

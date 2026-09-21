@@ -79,6 +79,9 @@ const orderSchema = new mongoose.Schema(
     },
 
     cancelReason: { type: String, default: "" },
+
+    // ── Lưu trữ ────────────────────────────────────────────
+    isArchived: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
