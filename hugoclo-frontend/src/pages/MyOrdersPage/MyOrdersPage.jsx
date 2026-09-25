@@ -89,7 +89,7 @@ const MyOrdersPage = () => {
     <div className="min-h-screen bg-[#f9f9f9]">
       {/* Header */}
       <div className="bg-white border-b border-[#f0f0f0]">
-        <div className="container-custom py-8">
+        <div className="container-custom py-3">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center gap-3">
               <FileTextOutlined style={{ fontSize: 28, color: '#1a1a1a' }} />

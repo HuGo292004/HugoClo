@@ -60,9 +60,10 @@ const MainHeader = () => {
       onClick: () => navigate('/my-orders'),
     },
     {
-      key: 'settings',
-      icon: <SettingOutlined />,
-      label: 'Cài đặt tài khoản',
+      key: 'profile',
+      icon: <UserOutlined />,
+      label: 'Tài khoản của tôi',
+      onClick: () => navigate('/profile'),
     },
     {
       key: 'logout',
@@ -183,8 +184,12 @@ const MainHeader = () => {
                 aria-label="Tài khoản của tôi"
               >
                 {/* Avatar vòng tròn */}
-                <span className="w-7 h-7 rounded-full bg-[#1a1a1a] flex items-center justify-center text-white text-[12px] font-bold shrink-0">
-                  {(user?.fullName || user?.email || 'U').charAt(0).toUpperCase()}
+                <span className="w-7 h-7 rounded-full bg-[#1a1a1a] flex items-center justify-center text-white text-[12px] font-bold shrink-0 overflow-hidden">
+                  {user?.avatar ? (
+                    <img src={user.avatar} alt="avatar" className="w-full h-full object-cover" />
+                  ) : (
+                    (user?.fullName || user?.email || 'U').charAt(0).toUpperCase()
+                  )}
                 </span>
                 <span className="text-[13px] font-semibold text-[#1a1a1a] max-w-[100px] truncate">
                   {user?.fullName || user?.email}
@@ -256,8 +261,12 @@ const MainHeader = () => {
           {isLoggedIn ? (
             <>
               <div className="flex items-center gap-2 py-3 border-b border-[#f0f0f0]">
-                <span className="w-8 h-8 rounded-full bg-[#1a1a1a] flex items-center justify-center text-white text-[13px] font-bold">
-                  {(user?.fullName || user?.email || 'U').charAt(0).toUpperCase()}
+                <span className="w-8 h-8 rounded-full bg-[#1a1a1a] flex items-center justify-center text-white text-[13px] font-bold overflow-hidden">
+                  {user?.avatar ? (
+                    <img src={user.avatar} alt="avatar" className="w-full h-full object-cover" />
+                  ) : (
+                    (user?.fullName || user?.email || 'U').charAt(0).toUpperCase()
+                  )}
                 </span>
                 <div>
                   <p className="text-[14px] font-semibold text-[#1a1a1a] m-0">{user?.fullName || 'Tài khoản'}</p>

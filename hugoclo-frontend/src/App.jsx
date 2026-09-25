@@ -25,6 +25,7 @@ import PrivateUserRoute from './components/PrivateUserRoute';
 import CheckoutPage from './pages/CheckoutPage/CheckoutPage';
 import OrderSuccessPage from './pages/OrderSuccessPage/OrderSuccessPage';
 import MyOrdersPage from './pages/MyOrdersPage/MyOrdersPage';
+import ProfilePage from './pages/ProfilePage/ProfilePage';
 import './index.css';
 
 const antdTheme = {
@@ -179,6 +180,18 @@ function App() {
                 <PrivateUserRoute>
                   <MainLayout>
                     <MyOrdersPage />
+                  </MainLayout>
+                </PrivateUserRoute>
+              }
+            />
+
+            {/* Profile */}
+            <Route
+              path="/profile"
+              element={
+                <PrivateUserRoute>
+                  <MainLayout>
+                    <ProfilePage />
                   </MainLayout>
                 </PrivateUserRoute>
               }
