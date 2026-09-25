@@ -24,7 +24,25 @@ const userSchema = new mongoose.Schema(
     },
     avatar: {
       type: String,
-      default: "",
+      default: '',
+    },
+    gender: {
+      type: String,
+      enum: ['male', 'female', 'other', ''],
+      default: '',
+    },
+    dob: {
+      type: Date,
+      default: null,
+    },
+    memberRank: {
+      type: String,
+      enum: ['silver', 'gold', 'platinum'],
+      default: 'silver',
+    },
+    totalSpent: {
+      type: Number,
+      default: 0,
     },
     role: {
       type: String,
