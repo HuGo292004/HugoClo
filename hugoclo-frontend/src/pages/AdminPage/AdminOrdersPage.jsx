@@ -376,8 +376,8 @@ const OrderDetailDrawer = ({ order, open, onClose, onStatusChange }) => {
           value={cancelReason}
           onChange={(e) => setCancelReason(e.target.value)}
           placeholder="Ví dụ: Khách hàng yêu cầu hủy, sản phẩm hết hàng..."
-          maxLength={200}
-          showCount
+          // maxLength={200}
+          // showCount
         />
       </Modal>
     </>
@@ -412,7 +412,7 @@ const QuickStatusDropdown = ({ order, onStatusChange }) => {
   return (
     <Tooltip title={`Chuyển sang "${cfg.label}"`}>
       <button
-        onClick={() => handleQuick(firstNext)}
+        onClick={(e) => { e.stopPropagation(); handleQuick(firstNext); }}
         disabled={loading}
         className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-[11px] font-bold cursor-pointer transition-all hover:shadow-md hover:-translate-y-px"
         style={{
@@ -505,6 +505,16 @@ const AdminOrdersPage = () => {
     loadTabCounts();
   }, []);
 
+  // Sync selectedOrder with updated orders list
+  useEffect(() => {
+    if (drawerOpen && selectedOrder) {
+      const updatedOrder = orders.find(o => o._id === selectedOrder._id);
+      if (updatedOrder && updatedOrder.orderStatus !== selectedOrder.orderStatus) {
+        setSelectedOrder(updatedOrder);
+      }
+    }
+  }, [orders, drawerOpen, selectedOrder]);
+
   // Debounce search
   const handleSearchInput = (val) => {
     setSearchInput(val);
@@ -536,6 +546,7 @@ const AdminOrdersPage = () => {
       title: 'Mã đơn',
       dataIndex: '_id',
       width: 110,
+      align: 'center',
       render: (id) => (
         <span className="font-mono font-bold text-[13px] text-[#1a1a1a]">
           #{id?.slice(-8).toUpperCase()}
@@ -553,11 +564,11 @@ const AdminOrdersPage = () => {
             <p className="font-semibold text-[13px] text-[#1a1a1a] m-0 leading-tight truncate max-w-[180px]">
               {name}
             </p>
-            {phone && (
+            {/* {phone && (
               <p className="text-[11px] text-[#aaa] m-0 mt-0.5">
                 <PhoneOutlined className="mr-1" />{phone}
               </p>
-            )}
+            )} */}
           </div>
         );
       },
@@ -605,6 +616,7 @@ const AdminOrdersPage = () => {
       title: 'Tổng tiền',
       dataIndex: 'totalAmount',
       width: 130,
+      align: 'center',
       render: (v) => (
         <span className="font-bold text-[13px] text-[#1a1a1a] whitespace-nowrap">
           {fmtPrice(v)}
@@ -614,8 +626,9 @@ const AdminOrdersPage = () => {
     {
       title: 'Thanh toán',
       width: 100,
+      align: 'center',
       render: (_, r) => (
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1 justify-center items-center">
           <PaymentBadge method={r.paymentMethod} />
           <span
             className="text-[11px] font-semibold"
@@ -629,17 +642,19 @@ const AdminOrdersPage = () => {
     {
       title: 'Trạng thái',
       width: 140,
+      align: 'center',
       render: (_, r) => <StatusBadge status={r.orderStatus} />,
     },
     {
       title: 'Thao tác',
       width: 140,
+      align: 'center',
       fixed: 'right',
       render: (_, r) => (
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center justify-center gap-2 flex-wrap">
           <Tooltip title="Xem chi tiết">
             <button
-              onClick={() => openDetail(r)}
+              onClick={(e) => { e.stopPropagation(); openDetail(r); }}
               className="w-8 h-8 rounded-lg bg-[#f5f5f5] text-[#555] border-none cursor-pointer flex items-center justify-center hover:bg-[#1a1a1a] hover:text-white transition-all duration-200"
             >
               <EyeOutlined style={{ fontSize: 13 }} />
@@ -710,27 +725,25 @@ const AdminOrdersPage = () => {
           </div>
 
           {/* Filter Bar */}
-          <div className="flex items-center justify-between gap-4 px-6 py-5 border-b border-[#f5f5f5] flex-wrap">
+          <div className="flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-4 px-6 py-5 border-b border-[#f5f5f5] flex-wrap">
             <Input
               placeholder="Tìm theo mã đơn, họ tên, số điện thoại..."
               prefix={<SearchOutlined className="text-[#ccc]" />}
               value={searchInput}
               onChange={(e) => handleSearchInput(e.target.value)}
               size="large"
-              style={{ width: 550 }}
-              className="rounded-xl"
+              className="rounded-xl w-full md:max-w-[400px]"
               allowClear
             />
             
-            <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-wrap">
               <Select
                 value={paymentFilter}
                 onChange={(v) => { setPaymentFilter(v); setPage(1); }}
                 size="large"
-                style={{ width: 160 }}
-                className="rounded-xl"
+                className="rounded-xl w-full sm:w-[160px]"
                 options={[
-                  { value: 'all',   label: 'Tất cả TT toán' },
+                  { value: 'all',   label: 'Tất cả PTTT' },
                   { value: 'cod',   label: 'COD' },
                   { value: 'vnpay', label: 'VNPay' },
                   { value: 'momo',  label: 'MoMo' },
@@ -738,24 +751,27 @@ const AdminOrdersPage = () => {
               />
               <RangePicker
                 placeholder={['Từ ngày', 'Đến ngày']}
+                format="DD/MM/YYYY"
                 onChange={(dates) => {
                   setDateRange(dates ? [dates[0].toDate(), dates[1].toDate()] : null);
                   setPage(1);
                 }}
                 size="large"
-                className="rounded-xl"
+                className="rounded-xl w-full sm:w-auto"
               />
-              <span className="text-[13px] text-[#aaa] font-medium ml-2">
+              {/* <div className="flex items-center gap-3 mt-2 sm:mt-0">
+                <span className="text-[13px] text-[#aaa] font-medium">
                 {total.toLocaleString('vi-VN')} đơn hàng
               </span>
-              <Tooltip title="Làm mới">
-                <button
-                  onClick={handleRefresh}
-                  className="w-10 h-10 rounded-xl bg-[#f5f5f5] border-none text-[#555] cursor-pointer flex items-center justify-center hover:bg-[#1a1a1a] hover:text-white transition-all duration-200"
-                >
-                  <ReloadOutlined style={{ fontSize: 15 }} />
-                </button>
-              </Tooltip>
+                <Tooltip title="Làm mới">
+                  <button
+                    onClick={handleRefresh}
+                    className="w-10 h-10 rounded-xl bg-[#f5f5f5] border-none text-[#555] cursor-pointer flex items-center justify-center hover:bg-[#1a1a1a] hover:text-white transition-all duration-200"
+                  >
+                    <ReloadOutlined style={{ fontSize: 15 }} />
+                  </button>
+                </Tooltip>
+              </div> */}
             </div>
           </div>
 
@@ -782,8 +798,7 @@ const AdminOrdersPage = () => {
                 pagination={false}
                 size="middle"
                 scroll={{ x: 1100 }}
-                rowClassName="hover:bg-[#fafafa] cursor-pointer"
-                onRow={(r) => ({ onClick: () => openDetail(r) })}
+                rowClassName="hover:bg-[#fafafa]"
               />
             )}
           </div>

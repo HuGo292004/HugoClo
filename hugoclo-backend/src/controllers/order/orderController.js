@@ -233,29 +233,13 @@ const getAllOrdersAdmin = async (req, res) => {
     }
 
     // Tìm kiếm theo mã đơn hoặc thông tin địa chỉ (tên, SĐT)
-    let orderIds = [];
     if (search && search.trim()) {
       const s = search.trim();
-      // Tìm theo _id (nếu search trông giống ObjectId)
-      const isObjectId = /^[a-fA-F0-9]{24}$/.test(s);
-      if (isObjectId) {
-        orderIds.push(s);
-      }
-      // Tìm theo tên người nhận hoặc SĐT
-      const byAddress = await Order.find({
-        $or: [
-          { 'shippingAddress.fullName': { $regex: s, $options: 'i' } },
-          { 'shippingAddress.phone':    { $regex: s, $options: 'i' } },
-        ],
-      }).select('_id');
-      orderIds.push(...byAddress.map((o) => o._id.toString()));
-
-      if (orderIds.length > 0) {
-        filter._id = { $in: orderIds };
-      } else if (!isObjectId) {
-        // Không match gì → trả về rỗng
-        filter._id = { $in: [] };
-      }
+      filter.$or = [
+        { 'shippingAddress.fullName': { $regex: s, $options: 'i' } },
+        { 'shippingAddress.phone': { $regex: s, $options: 'i' } },
+        { $expr: { $regexMatch: { input: { $toString: '$_id' }, regex: s, options: 'i' } } }
+      ];
     }
 
     const skip = (Number(page) - 1) * Number(limit);
