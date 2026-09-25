@@ -638,7 +638,7 @@ const AdminProductsPage = () => {
     >
       {/* ── Toolbar ── */}
       <div className="bg-white rounded-2xl p-5 shadow-[0_2px_12px_rgba(0,0,0,0.05)] mb-5">
-        <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div className="flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-4 flex-wrap">
           {/* Search */}
           <Input
             value={keyword}
@@ -647,11 +647,10 @@ const AdminProductsPage = () => {
             prefix={<SearchOutlined className="text-[#ccc]" />}
             size="large"
             allowClear
-            style={{ width: 550 }}
-            className="rounded-xl"
+            className="rounded-xl w-full xl:w-[550px]"
           />
 
-          <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-wrap w-full xl:w-auto">
             {/* Product type filter */}
           <Select
             value={filterType || undefined}
@@ -659,7 +658,7 @@ const AdminProductsPage = () => {
             placeholder="Tất Cả Loại"
             size="large"
             allowClear
-            style={{ width: 150 }}
+            className="w-full sm:w-[150px]"
           >
             <Option value="tops">Áo</Option>
             <Option value="bottoms">Quần</Option>
@@ -674,7 +673,7 @@ const AdminProductsPage = () => {
             placeholder="Tất Cả Giới Tính"
             size="large"
             allowClear
-            style={{ width: 190 }}
+            className="w-full sm:w-[190px]"
           >
             <Option value="men">Nam</Option>
             <Option value="women">Nữ</Option>
@@ -688,7 +687,7 @@ const AdminProductsPage = () => {
             placeholder="Trạng Thái"
             size="large"
             allowClear
-            style={{ width: 150 }}
+            className="w-full sm:w-[150px]"
           >
             <Option value="sale">Đang Sale</Option>
             <Option value="">Tất Cả</Option>
