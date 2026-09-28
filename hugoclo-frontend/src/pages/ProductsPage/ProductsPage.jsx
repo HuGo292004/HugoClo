@@ -4,7 +4,7 @@
 // ============================================================
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { HomeOutlined, LeftOutlined, RightOutlined, SearchOutlined, LoadingOutlined, WarningOutlined } from '@ant-design/icons';
 import { Spin } from 'antd';
 import { fetchProducts } from '../../api/productService';
@@ -108,6 +108,10 @@ const ProductsPage = () => {
   const [page,        setPage]       = useState(1);
   const [perPage,     setPerPage]    = useState(12);
 
+  // Lấy keyword từ URL (?keyword=...)
+  const [searchParams, setSearchParams] = useSearchParams();
+  const urlKeyword = searchParams.get('keyword') || '';
+
   // API state
   const [products,    setProducts]   = useState([]);
   const [total,       setTotal]      = useState(0);
@@ -115,13 +119,16 @@ const ProductsPage = () => {
   const [loading,     setLoading]    = useState(true);
   const [error,       setError]      = useState(null);
 
-  // Build query params từ filters + sort + page
+  // Build query params từ filters + sort + page + keyword từ URL
   const buildParams = useCallback(() => {
     const params = {
       page,
       limit: perPage,
       sort:  sortBy,
     };
+
+    // Keyword từ URL (search bar)
+    if (urlKeyword) params.keyword = urlKeyword;
 
     // Sidebar filters
     // Danh mục — map tên hiển thị → productType trong DB
@@ -137,7 +144,7 @@ const ProductsPage = () => {
     if (filters.colors.length > 0)       params.colors     = filters.colors.join(',');
 
     return params;
-  }, [page, perPage, sortBy, filters]);
+  }, [page, perPage, sortBy, filters, urlKeyword]);
 
   // Fetch khi params thay đổi
   useEffect(() => {
@@ -165,6 +172,9 @@ const ProductsPage = () => {
 
   const handleFilterChange = (partial) =>
     setFilters((prev) => ({ ...prev, ...partial }));
+
+  // Reset về trang 1 khi keyword URL thay đổi
+  useEffect(() => { setPage(1); }, [urlKeyword]);
 
   const handleResetFilters = () => {
     setFilters(defaultFilters);
@@ -214,6 +224,23 @@ const ProductsPage = () => {
 
           {/* Product grid */}
           <div className="flex-1 min-w-0">
+
+            {/* Banner kết quả tìm kiếm */}
+            {urlKeyword && (
+              <div className="flex items-center justify-between mb-5 px-4 py-3 bg-white rounded-xl border border-[#ebebeb]">
+                <span className="text-[14px] text-[#555]">
+                  Kết quả tìm kiếm cho <span className="font-bold text-[#1a1a1a]">"{urlKeyword}"</span>
+                  {!loading && <span className="text-[#888] ml-1">({total} sản phẩm)</span>}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setSearchParams({})}
+                  className="text-[12px] font-semibold text-[#e63946] bg-transparent border-none cursor-pointer hover:underline p-0"
+                >
+                  Xóa tìm kiếm ✕
+                </button>
+              </div>
+            )}
 
             {/* Error state */}
             {error && !loading && (

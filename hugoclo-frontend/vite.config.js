@@ -12,6 +12,9 @@ export default defineConfig({
     tailwindcss(),
     react(),
   ],
+  build: {
+    chunkSizeWarningLimit: 1000, // tăng từ 500KB lên 1000KB
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
