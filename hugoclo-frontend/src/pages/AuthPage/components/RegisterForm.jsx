@@ -11,7 +11,7 @@ import {
 } from '@ant-design/icons';
 import { FloatingField, Divider } from './LoginForm';
 import SocialLoginButtons from './SocialLoginButtons';
-
+import { registerAPI } from '../../../api/authService';
 /* ── Password strength logic ── */
 const getStrength = (pass) => {
   let score = 0;
@@ -78,17 +78,28 @@ const RegisterForm = ({ onSwitchToLogin }) => {
     return e;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const errs = validate();
     setErrors(errs);
     if (Object.keys(errs).length) return;
 
     setLoading(true);
-    setTimeout(() => {
+    try {
+      await registerAPI({
+        fullName: form.fullName,
+        email: form.email,
+        password: form.password,
+        phone: form.phone
+      });
+      message.success('Đăng ký thành công! Vui lòng đăng nhập.');
+      onSwitchToLogin();
+    } catch (error) {
+      console.error(error);
+      message.error(error.response?.data?.message || 'Đăng ký thất bại!');
+    } finally {
       setLoading(false);
-      message.success('Đăng ký thành công! Chào mừng bạn đến với HugoClo 🎉');
-    }, 1500);
+    }
   };
 
   return (
