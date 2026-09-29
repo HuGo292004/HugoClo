@@ -53,6 +53,13 @@ const login = async (req, res) => {
         message: "Sai mật khẩu",
       });
     }
+
+    // Kiểm tra tài khoản có bị khoá không.
+    if (!user.isActive) {
+      return res.status(403).json({
+        message: "Tài khoản của bạn đã bị khoá. Vui lòng liên hệ quản trị viên.",
+      });
+    }
     // Tạo token JWT với thông tin người dùng (id và role).
     const token = jwt.sign(
       { id: user._id, role: user.role },
