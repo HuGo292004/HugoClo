@@ -37,3 +37,41 @@ export const uploadAvatar = async (formData) => {
   });
   return res.data;
 };
+
+// ── Admin APIs ─────────────────────────────────────────────────
+
+/**
+ * [Admin] Lấy danh sách tất cả người dùng
+ * GET /api/user/admin/all
+ */
+export const fetchAllUsersAdmin = async (params = {}) => {
+  const res = await api.get('/user/admin/all', { params });
+  return res.data;
+};
+
+/**
+ * [Admin] Cập nhật role người dùng
+ * PUT /api/user/admin/:id/role
+ */
+export const updateUserRoleAdmin = async (id, role) => {
+  const res = await api.put(`/user/admin/${id}/role`, { role });
+  return res.data;
+};
+
+/**
+ * [Admin] Khoá / mở khoá tài khoản
+ * PATCH /api/user/admin/:id/status
+ */
+export const toggleUserStatusAdmin = async (id) => {
+  const res = await api.patch(`/user/admin/${id}/status`);
+  return res.data;
+};
+
+/**
+ * [Admin] Xoá người dùng
+ * DELETE /api/user/admin/:id
+ */
+export const deleteUserAdmin = async (id) => {
+  const res = await api.delete(`/user/admin/${id}`);
+  return res.data;
+};

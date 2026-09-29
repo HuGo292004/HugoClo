@@ -20,6 +20,7 @@ import { CartProvider } from './context/CartContext';
 import AdminDashboard from './pages/AdminPage/AdminDashboard';
 import AdminProductsPage from './pages/AdminPage/AdminProductsPage';
 import AdminOrdersPage from './pages/AdminPage/AdminOrdersPage';
+import AdminUsersPage from './pages/AdminPage/AdminUsersPage';
 import PrivateAdminRoute from './components/PrivateAdminRoute';
 import PrivateUserRoute from './components/PrivateUserRoute';
 import CheckoutPage from './pages/CheckoutPage/CheckoutPage';
@@ -147,6 +148,16 @@ function App() {
               element={
                 <PrivateAdminRoute>
                   <AdminOrdersPage />
+                </PrivateAdminRoute>
+              }
+            />
+
+            {/* Admin Customers */}
+            <Route
+              path="/admin/customers"
+              element={
+                <PrivateAdminRoute>
+                  <AdminUsersPage />
                 </PrivateAdminRoute>
               }
             />
