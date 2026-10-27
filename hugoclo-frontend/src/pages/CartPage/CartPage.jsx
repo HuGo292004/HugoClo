@@ -313,7 +313,7 @@ const CartPage = () => {
       {/* ── Page Title + Steps ── */}
       <div className="bg-white border-b border-[#f0f0f0]">
         <div className="container-custom py-6">
-          <h1 className="text-[32px] font-bold text-[#1a1a1a] text-center tracking-[-0.02em] m-0">
+          <h1 className="text-[28px] font-black text-[#1a1a1a] text-center tracking-[-0.02em] m-0">
             GIỎ HÀNG
           </h1>
           <StepIndicator current={1} />

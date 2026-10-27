@@ -8,6 +8,7 @@ const protect = require('../middleware/authMiddleware');
 const {
   getProfile, updateProfile, changePassword, uploadAvatar,
   getAllUsers, updateUserRole, toggleUserStatus, deleteUser,
+  toggleWishlist, getWishlist,
 } = require('../controllers/userController');
 const { upload } = require('../config/cloudinary.config');
 
@@ -31,6 +32,13 @@ router.put('/change-password', protect, changePassword);
 
 // POST /api/user/avatar
 router.post('/avatar', protect, upload.single('avatar'), uploadAvatar);
+
+// ── Wishlist routes ────────────────────────────────────────────
+// GET  /api/user/wishlist
+router.get('/wishlist', protect, getWishlist);
+
+// POST /api/user/wishlist/toggle
+router.post('/wishlist/toggle', protect, toggleWishlist);
 
 // ── Admin routes ───────────────────────────────────────────────
 // GET  /api/user/admin/all

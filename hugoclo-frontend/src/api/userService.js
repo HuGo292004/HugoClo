@@ -75,3 +75,23 @@ export const deleteUserAdmin = async (id) => {
   const res = await api.delete(`/user/admin/${id}`);
   return res.data;
 };
+
+// ── Wishlist APIs ───────────────────────────────────────────────
+
+/**
+ * Lấy danh sách sản phẩm yêu thích
+ * GET /api/user/wishlist
+ */
+export const getWishlist = async () => {
+  const res = await api.get('/user/wishlist');
+  return res.data; // { wishlist: [...] }
+};
+
+/**
+ * Toggle sản phẩm yêu thích (thêm hoặc xóa)
+ * POST /api/user/wishlist/toggle
+ */
+export const toggleWishlist = async (productId) => {
+  const res = await api.post('/user/wishlist/toggle', { productId });
+  return res.data; // { added: bool, wishlist: [...] }
+};

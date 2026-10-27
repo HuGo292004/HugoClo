@@ -27,6 +27,8 @@ import CheckoutPage from './pages/CheckoutPage/CheckoutPage';
 import OrderSuccessPage from './pages/OrderSuccessPage/OrderSuccessPage';
 import MyOrdersPage from './pages/MyOrdersPage/MyOrdersPage';
 import ProfilePage from './pages/ProfilePage/ProfilePage';
+import WishlistPage from './pages/WishlistPage/WishlistPage';
+import { WishlistProvider } from './context/WishlistContext';
 import './index.css';
 
 const antdTheme = {
@@ -57,8 +59,9 @@ function App() {
     <BrowserRouter>
       <AuthProvider>
         <CartProvider>
-          <ConfigProvider theme={antdTheme} locale={viVN}>
-          <Routes>
+          <WishlistProvider>
+            <ConfigProvider theme={antdTheme} locale={viVN}>
+            <Routes>
             {/* Home — full header + footer */}
             <Route
               path="/"
@@ -208,11 +211,24 @@ function App() {
               }
             />
 
+            {/* Wishlist */}
+            <Route
+              path="/wishlist"
+              element={
+                <PrivateUserRoute>
+                  <MainLayout>
+                    <WishlistPage />
+                  </MainLayout>
+                </PrivateUserRoute>
+              }
+            />
+
             {/* Fallback */}
             <Route path="*" element={<MainLayout><HomePage /></MainLayout>} />
-          </Routes>
-        </ConfigProvider>
-      </CartProvider>
+            </Routes>
+            </ConfigProvider>
+          </WishlistProvider>
+        </CartProvider>
     </AuthProvider>
   </BrowserRouter>
   );

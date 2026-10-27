@@ -15,8 +15,20 @@ const createProduct = async (req, res) => {
     const imageUrls = req.files?.map((file) => file.path) || [];
 
     // Parse các field JSON gửi từ form-data
-    const colors    = req.body.colors    ? JSON.parse(req.body.colors)    : [];
-    const sizes     = req.body.sizes     ? JSON.parse(req.body.sizes)     : [];
+    let colors = req.body.colors ? JSON.parse(req.body.colors) : [];
+    // Map token ảnh cho từng màu (nếu có)
+    colors = colors.map((col) => {
+      const mappedImgs = (col.images || []).map((token) => {
+        if (typeof token === 'string' && token.startsWith('new:')) {
+          const idx = Number(token.split(':')[1]);
+          return imageUrls[idx] || null;
+        }
+        return token;
+      }).filter(Boolean);
+      return { ...col, images: mappedImgs };
+    });
+
+    const sizes = req.body.sizes ? JSON.parse(req.body.sizes) : [];
 
     const product = await Product.create({
       ...req.body,          // name, price, description, category, isOnSale, material, sizeGuide...
@@ -47,17 +59,26 @@ const getProducts = async (req, res) => {
     }
 
     // ── Lọc gender ────────────────────────────────────────────
-    // ?category=men  (quick filter — single)
-    // ?gender=men    (legacy)
+    // ?gender=men            (single)
+    // ?gender=men,unisex     (multi — trang Nam sẽ dùng cái này)
+    // ?category=men          (legacy single)
     const GENDERS = ["men", "women", "unisex"];
 
-    if (req.query.category && GENDERS.includes(req.query.category)) {
-      filter.gender = req.query.category;
-    } else if (req.query.gender && GENDERS.includes(req.query.gender)) {
-      filter.gender = req.query.gender;
-    } else if (req.query.category) {
-      // ObjectId
-      filter.category = req.query.category;
+    const genderQuery = req.query.gender || req.query.category;
+    if (genderQuery) {
+      const parts = String(genderQuery)
+        .split(",")
+        .map((g) => g.trim().toLowerCase())
+        .filter((g) => GENDERS.includes(g));
+
+      if (parts.length === 1) {
+        filter.gender = parts[0];
+      } else if (parts.length > 1) {
+        filter.gender = { $in: parts }; // Lấy nhiều giới tính cùng lúc
+      } else if (req.query.category) {
+        // ObjectId danh mục thực tế
+        filter.category = req.query.category;
+      }
     }
 
     // ── Lọc theo tên danh mục (Áo, Quần, Giày, Phụ kiện) ────────
@@ -183,12 +204,57 @@ const updateProduct = async (req, res) => {
       return res.status(404).json({ message: "Sản phẩm không tồn tại" });
     }
 
-    // Nếu có file mới upload → gộp vào danh sách ảnh cũ
+    // ── Xử lý ảnh: giữ nguyên thứ tự sắp xếp từ frontend ──────
     const newImageUrls = req.files?.map((file) => file.path) || [];
-    const mergedImages = [...(existing.images || []), ...newImageUrls];
+    let mergedImages;
+
+    if (req.body.imageOrder) {
+      try {
+        const orderList = typeof req.body.imageOrder === 'string'
+          ? JSON.parse(req.body.imageOrder)
+          : req.body.imageOrder;
+        mergedImages = orderList.map((token) => {
+          if (typeof token === 'string' && token.startsWith('new:')) {
+            const idx = Number(token.split(':')[1]);
+            return newImageUrls[idx];
+          } else if (typeof token === 'string' && token.startsWith('existing:')) {
+            return token.substring(9);
+          }
+          return token;
+        }).filter(Boolean);
+      } catch (e) {
+        mergedImages = [...(existing.images || []), ...newImageUrls];
+      }
+    } else if (req.body.existingImages) {
+      try {
+        const keptExisting = typeof req.body.existingImages === 'string'
+          ? JSON.parse(req.body.existingImages)
+          : req.body.existingImages;
+        mergedImages = [...keptExisting, ...newImageUrls];
+      } catch (e) {
+        mergedImages = [...(existing.images || []), ...newImageUrls];
+      }
+    } else {
+      mergedImages = [...(existing.images || []), ...newImageUrls];
+    }
 
     // Parse JSON fields nếu gửi từ form-data
-    const colors = req.body.colors ? JSON.parse(req.body.colors) : undefined;
+    let colors = req.body.colors ? JSON.parse(req.body.colors) : undefined;
+    if (colors && Array.isArray(colors)) {
+      colors = colors.map((col) => {
+        const mappedImgs = (col.images || []).map((token) => {
+          if (typeof token === 'string' && token.startsWith('new:')) {
+            const idx = Number(token.split(':')[1]);
+            return newImageUrls[idx] || null;
+          } else if (typeof token === 'string' && token.startsWith('existing:')) {
+            return token.substring(9);
+          }
+          return token;
+        }).filter(Boolean);
+        return { ...col, images: mappedImgs };
+      });
+    }
+
     const sizes  = req.body.sizes  ? JSON.parse(req.body.sizes)  : undefined;
 
     const updateData = {

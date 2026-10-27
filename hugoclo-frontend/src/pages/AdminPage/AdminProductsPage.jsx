@@ -15,7 +15,10 @@ import {
   DeleteOutlined, EyeOutlined, UploadOutlined,
   ExclamationCircleOutlined, ReloadOutlined,
   FilterOutlined, DownloadOutlined,
+  LeftOutlined, RightOutlined, CloseOutlined,
+  CheckOutlined,
 } from '@ant-design/icons';
+import { extractColorsFromImage } from '../../utils/colorThiefUtils';
 import AdminLayout from './AdminLayout';
 import {
   fetchProducts, createProduct, updateProduct, deleteProduct,
@@ -50,9 +53,17 @@ const stockColor = (s) => {
 
 // ── Add/Edit Product Modal ────────────────────────────────────
 const ProductModal = ({ open, onClose, onSaved, editProduct }) => {
-  const [form]    = Form.useForm();
-  const [loading, setLoading] = useState(false);
-  const [fileList, setFileList] = useState([]);
+  const [form]               = Form.useForm();
+  const [loading, setLoading]= useState(false);
+
+  // Quản lý ảnh: mảng object [{ id, url, file, isExisting }]
+  const [images, setImages]  = useState([]);
+  const [draggedIndex, setDraggedIndex] = useState(null);
+
+  // Quản lý màu sắc
+  const [productColors, setProductColors]         = useState([]); // Màu được lưu cho sản phẩm [{ name, code }]
+  const [suggestedColors, setSuggestedColors]     = useState([]); // Màu gợi ý từ ColorThief [{ name, code }]
+  const [isExtractingColor, setIsExtractingColor] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -63,21 +74,219 @@ const ProductModal = ({ open, onClose, onSaved, editProduct }) => {
           : 0;
 
         form.setFieldsValue({
-          name:          editProduct.name,
-          description:   editProduct.description,
-          basePrice:     originalPrice,
+          name:            editProduct.name,
+          description:     editProduct.description,
+          basePrice:       originalPrice,
           discountPercent: discountPercent,
-          stock:         editProduct.stock,
-          gender:        editProduct.gender,
-          productType:   editProduct.productType,
-          material:      editProduct.material,
+          stock:           editProduct.stock,
+          gender:          editProduct.gender,
+          productType:     editProduct.productType,
+          material:        editProduct.material,
         });
+
+        // Nạp danh sách ảnh hiện có
+        const existingImgs = (editProduct.images || []).map((url, i) => ({
+          id: `existing-${i}-${url}`,
+          url,
+          isExisting: true,
+        }));
+        setImages(existingImgs);
+
+        // Nạp danh sách màu hiện có, liên kết với ảnh tương ứng
+        const loadedColors = (editProduct.colors || []).map((c, i) => {
+          let matchedImgId = null;
+          if (c.images && c.images.length > 0) {
+            const foundImg = existingImgs.find((im) => im.url === c.images[0]);
+            if (foundImg) matchedImgId = foundImg.id;
+          }
+          // Nếu sản phẩm cũ chưa có c.images, gán theo index ảnh tương ứng
+          if (!matchedImgId && existingImgs[i]) {
+            matchedImgId = existingImgs[i].id;
+          }
+          return {
+            name: c.name,
+            code: c.code,
+            imageId: matchedImgId,
+          };
+        });
+        setProductColors(loadedColors);
+
+        // Trích xuất màu đề xuất từ các ảnh hiện có bằng ColorThief
+        if (editProduct.images?.length > 0) {
+          setIsExtractingColor(true);
+          Promise.all(editProduct.images.slice(0, 5).map((u) => extractColorsFromImage(u)))
+            .then((res) => {
+              const uniqueList = [];
+              res.flat().forEach((c) => {
+                if (c && !uniqueList.some((x) => x.code.toLowerCase() === c.code.toLowerCase())) {
+                  uniqueList.push(c);
+                }
+              });
+              setSuggestedColors(uniqueList);
+            })
+            .catch(() => {})
+            .finally(() => setIsExtractingColor(false));
+        } else {
+          setSuggestedColors([]);
+        }
       } else {
         form.resetFields();
-        setFileList([]);
+        setImages([]);
+        setProductColors([]);
+        setSuggestedColors([]);
       }
     }
   }, [open, editProduct, form]);
+
+  // Xử lý khi thêm file ảnh mới
+  const handleAddFile = async (file) => {
+    if (images.length >= 8) {
+      message.warning('Tối đa 8 hình ảnh cho mỗi sản phẩm');
+      return;
+    }
+
+    const objectUrl = URL.createObjectURL(file);
+    const newImgId = `new-${Date.now()}-${Math.random()}`;
+    const newImg = {
+      id: newImgId,
+      url: objectUrl,
+      file,
+      isExisting: false,
+    };
+
+    setImages((prev) => [...prev, newImg]);
+
+    // Trích xuất màu tự động bằng ColorThief cho chính tấm ảnh này
+    setIsExtractingColor(true);
+    try {
+      const extracted = await extractColorsFromImage(file);
+      if (extracted && extracted.length > 0) {
+        // Cập nhật danh sách gợi ý
+        setSuggestedColors((prev) => {
+          const combined = [...prev];
+          extracted.forEach((c) => {
+            if (!combined.some((x) => x.code.toLowerCase() === c.code.toLowerCase())) {
+              combined.push(c);
+            }
+          });
+          return combined;
+        });
+
+        // Màu chủ đạo của tấm ảnh này
+        const primaryColor = extracted[0];
+
+        // Tự động thêm màu và GÁN LUÔN tấm ảnh này vào màu đó
+        setProductColors((prev) => {
+          const existsIdx = prev.findIndex((c) => c.code.toLowerCase() === primaryColor.code.toLowerCase());
+          if (existsIdx === -1) {
+            message.info(`ColorThief đề xuất màu "${primaryColor.name}" cho ảnh vừa tải`);
+            return [
+              ...prev,
+              {
+                name: primaryColor.name,
+                code: primaryColor.code,
+                imageId: newImgId,
+              },
+            ];
+          } else {
+            // Nếu màu đã có nhưng chưa gán ảnh, gán ảnh mới này vào màu đó
+            return prev.map((c, idx) => {
+              if (idx === existsIdx && !c.imageId) {
+                return { ...c, imageId: newImgId };
+              }
+              return c;
+            });
+          }
+        });
+      }
+    } catch (err) {
+      console.warn('Lỗi trích xuất màu:', err);
+    } finally {
+      setIsExtractingColor(false);
+    }
+  };
+
+  // Đổi thứ tự ảnh bằng nút mũi tên
+  const handleMoveImage = (index, delta) => {
+    const targetIndex = index + delta;
+    if (targetIndex < 0 || targetIndex >= images.length) return;
+    setImages((prev) => {
+      const copy = [...prev];
+      const temp = copy[index];
+      copy[index] = copy[targetIndex];
+      copy[targetIndex] = temp;
+      return copy;
+    });
+  };
+
+  // Đổi thứ tự ảnh bằng kéo thả (Drag and Drop)
+  const handleDragStart = (e, index) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragEnter = (e, targetIndex) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === targetIndex) return;
+    setImages((prev) => {
+      const copy = [...prev];
+      const [draggedItem] = copy.splice(draggedIndex, 1);
+      copy.splice(targetIndex, 0, draggedItem);
+      return copy;
+    });
+    setDraggedIndex(targetIndex);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+  };
+
+  // Xóa ảnh
+  const handleRemoveImage = (index) => {
+    setImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  // Quản lý màu sắc
+  const handleToggleSuggestedColor = (sc) => {
+    setProductColors((prev) => {
+      const exists = prev.some((c) => c.code.toLowerCase() === sc.code.toLowerCase());
+      if (exists) {
+        return prev.filter((c) => c.code.toLowerCase() !== sc.code.toLowerCase());
+      }
+      return [...prev, { name: sc.name, code: sc.code }];
+    });
+  };
+
+  const handleAddAllSuggestedColors = () => {
+    setProductColors((prev) => {
+      const combined = [...prev];
+      suggestedColors.forEach((sc) => {
+        if (!combined.some((c) => c.code.toLowerCase() === sc.code.toLowerCase())) {
+          combined.push({ name: sc.name, code: sc.code });
+        }
+      });
+      return combined;
+    });
+  };
+
+  const handleAddCustomColor = () => {
+    setProductColors((prev) => [
+      ...prev,
+      { name: 'Màu mới', code: '#1a1a1a' },
+    ]);
+  };
+
+  const handleColorChange = (index, field, value) => {
+    setProductColors((prev) => {
+      const copy = [...prev];
+      copy[index] = { ...copy[index], [field]: value };
+      return copy;
+    });
+  };
+
+  const handleRemoveProductColor = (index) => {
+    setProductColors((prev) => prev.filter((_, i) => i !== index));
+  };
 
   const handleSubmit = async () => {
     try {
@@ -100,9 +309,60 @@ const ProductModal = ({ open, onClose, onSaved, editProduct }) => {
       formData.append('price', finalPrice);
       formData.append('originalPrice', finalOriginalPrice);
       formData.append('isOnSale', discountPercent > 0);
-      fileList.forEach((f) => {
-        if (f.originFileObj) formData.append('images', f.originFileObj);
+
+      // Chuẩn bị danh sách newFiles theo thứ tự gửi lên
+      const newFiles = [];
+      images.forEach((img) => {
+        if (img.file) newFiles.push(img.file);
       });
+
+      // Format colors kèm ảnh tương ứng
+      const formattedColors = productColors.map((col) => {
+        let colorImgs = [];
+        if (col.imageId) {
+          const matchedImg = images.find((im) => im.id === col.imageId);
+          if (matchedImg) {
+            if (matchedImg.isExisting) {
+              colorImgs = [`existing:${matchedImg.url}`];
+            } else if (matchedImg.file) {
+              const fileIdx = newFiles.indexOf(matchedImg.file);
+              if (fileIdx !== -1) {
+                colorImgs = [`new:${fileIdx}`];
+              }
+            }
+          }
+        }
+        return {
+          name: col.name,
+          code: col.code,
+          images: colorImgs,
+        };
+      });
+
+      // Gửi mảng màu sắc đã liên kết ảnh
+      formData.append('colors', JSON.stringify(formattedColors));
+
+      // Gửi ảnh theo đúng thứ tự đã sắp xếp
+      if (editProduct) {
+        const imageOrder = [];
+        let newIndex = 0;
+        images.forEach((img) => {
+          if (img.isExisting) {
+            imageOrder.push(`existing:${img.url}`);
+          } else if (img.file) {
+            imageOrder.push(`new:${newIndex}`);
+            formData.append('images', img.file);
+            newIndex++;
+          }
+        });
+        formData.append('imageOrder', JSON.stringify(imageOrder));
+      } else {
+        images.forEach((img) => {
+          if (img.file) {
+            formData.append('images', img.file);
+          }
+        });
+      }
 
       if (editProduct) {
         await updateProduct(editProduct._id, formData);
@@ -160,8 +420,6 @@ const ProductModal = ({ open, onClose, onSaved, editProduct }) => {
           </Form.Item>
         </div>
 
-
-
         {/* Price row */}
         <div className="grid grid-cols-3 gap-4">
           <Form.Item 
@@ -210,33 +468,289 @@ const ProductModal = ({ open, onClose, onSaved, editProduct }) => {
           <TextArea rows={3} placeholder="Mô tả sản phẩm..." />
         </Form.Item>
 
-        {/* Images */}
-        <Form.Item label="Hình Ảnh Sản Phẩm">
-          <Upload
-            listType="picture-card"
-            fileList={fileList}
-            onChange={({ fileList: fl }) => setFileList(fl)}
-            beforeUpload={() => false}
-            accept="image/*"
-            multiple
-          >
-            {fileList.length < 5 && (
-              <div className="flex flex-col items-center gap-1 text-[#999]">
-                <UploadOutlined style={{ fontSize: 20 }} />
-                <span className="text-[12px]">Tải ảnh lên</span>
-              </div>
+        {/* Images with Reorder & Drag-and-drop */}
+        <Form.Item 
+          label={
+            <div className="flex items-center justify-between w-full">
+              <span className="font-semibold text-[14px]">Hình Ảnh Sản Phẩm</span>
+            </div>
+          }
+        >
+          <div className="flex flex-wrap gap-3 items-center">
+            {/* Nút Upload giữ nguyên vị trí và phong cách */}
+            {images.length < 8 && (
+              <Upload
+                beforeUpload={(file) => {
+                  handleAddFile(file);
+                  return false;
+                }}
+                showUploadList={false}
+                accept="image/*"
+                multiple
+              >
+                <div className="w-24 h-24 rounded-xl border-2 border-dashed border-[#d9d9d9] hover:border-[#1a1a1a] flex flex-col items-center justify-center gap-1 text-[#999] hover:text-[#1a1a1a] cursor-pointer transition-all bg-[#fafafa] hover:bg-white shadow-sm">
+                  <UploadOutlined style={{ fontSize: 22 }} />
+                  <span className="text-[12px] font-medium">Tải ảnh lên</span>
+                </div>
+              </Upload>
             )}
-          </Upload>
-          {editProduct?.images?.length > 0 && (
-            <div className="flex gap-2 flex-wrap mt-2">
-              {editProduct.images.map((src, i) => (
-                <img key={i} src={src} alt="" className="w-16 h-16 rounded-lg object-cover border border-[#f0f0f0]" />
+
+            {/* Danh sách ảnh kéo thả và có nút đổi vị trí */}
+            {images.map((img, index) => (
+              <div
+                key={img.id}
+                draggable
+                onDragStart={(e) => handleDragStart(e, index)}
+                onDragEnter={(e) => handleDragEnter(e, index)}
+                onDragEnd={handleDragEnd}
+                onDragOver={(e) => e.preventDefault()}
+                className={`relative w-24 h-24 rounded-xl overflow-hidden border-2 cursor-grab active:cursor-grabbing group transition-all select-none shadow-sm ${
+                  draggedIndex === index
+                    ? 'opacity-40 border-dashed border-blue-500 scale-95'
+                    : 'border-[#e8e8e8] hover:border-[#1a1a1a] hover:shadow-md'
+                }`}
+              >
+                <img
+                  src={img.url}
+                  alt={`Ảnh ${index + 1}`}
+                  className="w-full h-full object-cover pointer-events-none"
+                />
+
+                {/* Badge Ảnh chính hoặc số thứ tự */}
+                <div className="absolute top-1 left-1 pointer-events-none">
+                  {index === 0 ? (
+                    <span className="px-1.5 py-0.5 bg-[#1a1a1a] text-white text-[10px] font-bold rounded shadow">
+                      Ảnh chính
+                    </span>
+                  ) : (
+                    <span className="px-1.5 py-0.5 bg-black/60 text-white text-[10px] font-semibold rounded backdrop-blur-sm">
+                      #{index + 1}
+                    </span>
+                  )}
+                </div>
+
+                {/* Badge hiển thị màu đang gắn với ảnh này */}
+                {(() => {
+                  const linkedColor = productColors.find((c) => c.imageId === img.id);
+                  if (!linkedColor) return null;
+                  return (
+                    <div className="absolute bottom-6 left-1 pointer-events-none z-10">
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-black/75 text-white text-[10px] font-semibold backdrop-blur-sm shadow">
+                        <span className="w-2 h-2 rounded-full border border-white/40" style={{ backgroundColor: linkedColor.code }} />
+                        {linkedColor.name}
+                      </span>
+                    </div>
+                  );
+                })()}
+
+                {/* Nút Xóa ảnh */}
+                <button
+                  type="button"
+                  onClick={() => handleRemoveImage(index)}
+                  title="Xóa ảnh này"
+                  className="absolute top-1 right-1 w-5 h-5 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity border-none cursor-pointer shadow z-10"
+                >
+                  <CloseOutlined style={{ fontSize: 9 }} />
+                </button>
+
+                {/* Thanh điều khiển thứ tự (nút mũi tên trái/phải) */}
+                <div className="absolute bottom-0 inset-x-0 bg-black/75 py-1 px-1.5 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm">
+                  <button
+                    type="button"
+                    onClick={() => handleMoveImage(index, -1)}
+                    disabled={index === 0}
+                    title="Chuyển sang trái"
+                    className="w-5 h-5 flex items-center justify-center text-white hover:text-blue-300 disabled:opacity-20 disabled:hover:text-white border-none bg-transparent cursor-pointer p-0"
+                  >
+                    <LeftOutlined style={{ fontSize: 10 }} />
+                  </button>
+                  <span className="text-[10px] text-gray-300 font-mono">
+                    {index + 1}/{images.length}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handleMoveImage(index, 1)}
+                    disabled={index === images.length - 1}
+                    title="Chuyển sang phải"
+                    className="w-5 h-5 flex items-center justify-center text-white hover:text-blue-300 disabled:opacity-20 disabled:hover:text-white border-none bg-transparent cursor-pointer p-0"
+                  >
+                    <RightOutlined style={{ fontSize: 10 }} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Form.Item>
+
+        {/* Colors Section (ColorThief Suggestions & Selected Colors) */}
+        <div className="border border-[#ebebeb] rounded-2xl p-4 bg-[#fafafa] mb-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <span className="text-[13px] font-bold text-[#1a1a1a] uppercase tracking-wide">
+                Màu Sắc Sản Phẩm ({productColors.length})
+              </span>
+              {isExtractingColor && (
+                <span className="text-[12px] text-blue-600 flex items-center gap-1 font-normal">
+                  <Spin size="small" /> Đang trích xuất màu từ ảnh...
+                </span>
+              )}
+            </div>
+            <Button
+              size="small"
+              icon={<PlusOutlined />}
+              onClick={handleAddCustomColor}
+              className="text-[12px]"
+            >
+              Thêm màu tùy chỉnh
+            </Button>
+          </div>
+
+          {/* Bảng màu gợi ý từ ảnh thông qua ColorThief */}
+          {/* {suggestedColors.length > 0 && (
+            <div className="mb-4 p-3 bg-white rounded-xl border border-[#e8e8e8]">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[12px] font-semibold text-[#555] flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse" />
+                  Màu đề xuất từ ảnh (ColorThief) — Click để thêm vào sản phẩm:
+                </span>
+                <Button
+                  type="link"
+                  size="small"
+                  onClick={handleAddAllSuggestedColors}
+                  className="text-[12px] p-0 h-auto font-medium"
+                >
+                  + Thêm tất cả
+                </Button>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {suggestedColors.map((sc, idx) => {
+                  const isAdded = productColors.some(
+                    (c) => c.code.toLowerCase() === sc.code.toLowerCase()
+                  );
+                  return (
+                    <button
+                      key={`${sc.code}-${idx}`}
+                      type="button"
+                      onClick={() => handleToggleSuggestedColor(sc)}
+                      className={`flex items-center gap-2 px-3 py-1.5 rounded-full border text-[12px] font-medium transition-all cursor-pointer ${
+                        isAdded
+                          ? 'bg-[#1a1a1a] text-white border-[#1a1a1a] shadow-sm'
+                          : 'bg-white text-[#333] border-[#d9d9d9] hover:border-[#1a1a1a] hover:bg-[#f5f5f5]'
+                      }`}
+                    >
+                      <span
+                        className="w-4 h-4 rounded-full border border-black/15 shadow-inner shrink-0"
+                        style={{ backgroundColor: sc.code }}
+                      />
+                      <span>{sc.name}</span>
+                      <span className="font-mono text-[11px] opacity-75">{sc.code}</span>
+                      {isAdded ? (
+                        <CheckOutlined className="text-[11px]" />
+                      ) : (
+                        <PlusOutlined className="text-[10px]" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )} */}
+
+          {/* Danh sách màu đã chọn cho sản phẩm */}
+          {productColors.length === 0 ? (
+            <div className="text-center py-4 text-[#999] text-[13px] bg-white rounded-xl border border-dashed border-[#e0e0e0]">
+              Chưa có màu sắc nào. Tải ảnh lên để ColorThief tự động đề xuất hoặc nhấn "Thêm màu tùy chỉnh".
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2.5">
+              {productColors.map((color, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-center gap-3 p-2.5 bg-white rounded-xl border border-[#ebebeb] shadow-sm flex-wrap sm:flex-nowrap"
+                >
+                  {/* Color picker circle */}
+                  <div className="relative w-8 h-8 shrink-0">
+                    <input
+                      type="color"
+                      value={color.code?.startsWith('#') && color.code.length === 7 ? color.code : '#1a1a1a'}
+                      onChange={(e) => handleColorChange(idx, 'code', e.target.value)}
+                      className="absolute inset-0 opacity-0 w-full h-full cursor-pointer z-10"
+                      title="Đổi mã màu"
+                    />
+                    <div
+                      className="w-8 h-8 rounded-full border border-black/20 shadow-sm cursor-pointer"
+                      style={{ backgroundColor: color.code }}
+                    />
+                  </div>
+
+                  {/* Color Name Input */}
+                  <Input
+                    size="small"
+                    placeholder="Tên màu (vd: Đen)"
+                    value={color.name}
+                    onChange={(e) => handleColorChange(idx, 'name', e.target.value)}
+                    style={{ width: 140 }}
+                    className="text-[13px]"
+                  />
+
+                  {/* Color Hex Input */}
+                  <Input
+                    size="small"
+                    placeholder="#1a1a1a"
+                    value={color.code}
+                    onChange={(e) => handleColorChange(idx, 'code', e.target.value)}
+                    style={{ width: 95 }}
+                    className="font-mono text-[12px]"
+                  />
+
+                  {/* Select ảnh gắn với màu này */}
+                  <div className="flex items-center gap-2 flex-1 min-w-[200px] bg-[#f9f9f9] px-2.5 py-1 rounded-lg border border-[#e8e8e8]">
+                    <span className="text-[11px] text-[#777] whitespace-nowrap font-medium">Ảnh của màu:</span>
+                    {(() => {
+                      const linkedImg = images.find((im) => im.id === color.imageId);
+                      return linkedImg ? (
+                        <img
+                          src={linkedImg.url}
+                          alt="Ảnh màu"
+                          className="w-7 h-7 rounded-md object-cover border border-[#d9d9d9] shrink-0"
+                          title="Ảnh gắn liền với màu này"
+                        />
+                      ) : (
+                        <span className="text-[11px] text-gray-400 italic shrink-0">Chưa chọn</span>
+                      );
+                    })()}
+
+                    <Select
+                      size="small"
+                      placeholder="Chọn ảnh..."
+                      value={color.imageId || undefined}
+                      onChange={(val) => handleColorChange(idx, 'imageId', val)}
+                      className="flex-1"
+                      allowClear
+                    >
+                      {images.map((img, i) => (
+                        <Option key={img.id} value={img.id}>
+                          Ảnh #{i + 1} {i === 0 ? '(Chính)' : ''}
+                        </Option>
+                      ))}
+                    </Select>
+                  </div>
+
+                  {/* Delete color button */}
+                  <Button
+                    type="text"
+                    danger
+                    size="small"
+                    icon={<DeleteOutlined />}
+                    onClick={() => handleRemoveProductColor(idx)}
+                    title="Xóa màu này"
+                  />
+                </div>
               ))}
             </div>
           )}
-        </Form.Item>
-
-
+        </div>
 
         {/* Footer buttons */}
         <div className="flex justify-end gap-3 pt-2 border-t border-[#f0f0f0] mt-4">
@@ -338,6 +852,27 @@ const ProductDetailModal = ({ open, onClose, product }) => {
               <span className={`font-bold text-[14px] ${stockColor(product.stock)}`}>{product.stock}</span>
             </div>
           </div>
+
+          {product.colors && product.colors.length > 0 && (
+            <div>
+              <span className="font-semibold block mb-1.5 text-[13px] text-gray-800">Màu sắc ({product.colors.length}):</span>
+              <div className="flex flex-wrap gap-2">
+                {product.colors.map((c, i) => (
+                  <span
+                    key={i}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[12px] bg-white border border-[#e0e0e0] shadow-xs"
+                  >
+                    <span
+                      className="w-3.5 h-3.5 rounded-full border border-black/20"
+                      style={{ backgroundColor: c.code }}
+                    />
+                    <span className="font-medium text-[#333]">{c.name}</span>
+                    <span className="font-mono text-[10px] text-gray-400">{c.code}</span>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
 
           {product.material && (
             <div>
