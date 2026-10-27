@@ -12,12 +12,14 @@ import {
   MenuOutlined,
   CloseOutlined,
   HeartOutlined,
+  HeartFilled,
   LogoutOutlined,
   SettingOutlined,
 } from '@ant-design/icons';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import { useCart } from '../../../context/CartContext';
+import { useWishlist } from '../../../context/WishlistContext';
 import logo from '../../../assets/hugoclo_logo.png';
 
 const NAV_ITEMS = [
@@ -34,6 +36,7 @@ const MainHeader = () => {
 
   const { user, isLoggedIn, logout } = useAuth();
   const { cartCount }                = useCart();
+  const { wishlistIds }              = useWishlist();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -141,9 +144,15 @@ const MainHeader = () => {
           <SearchBar navigate={navigate} />
 
           {/* Wishlist */}
-          <IconBtn aria="Danh sách yêu thích">
-            <HeartOutlined />
-          </IconBtn>
+          <Link to="/wishlist" className="no-underline">
+            <IconBtn aria="Danh sách yêu thích">
+              <Badge count={isLoggedIn ? wishlistIds.size : 0} size="small" color="#1a1a1a" offset={[2, -2]}>
+                {wishlistIds.size > 0 && isLoggedIn
+                  ? <HeartFilled className="text-[18px]" />
+                  : <HeartOutlined className="text-[18px]" />}
+              </Badge>
+            </IconBtn>
+          </Link>
 
           {/* Cart */}
           <Link to="/cart" className="no-underline">

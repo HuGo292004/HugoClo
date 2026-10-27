@@ -254,4 +254,43 @@ const deleteUser = async (req, res) => {
   }
 };
 
-module.exports = { getProfile, updateProfile, changePassword, uploadAvatar, getAllUsers, updateUserRole, toggleUserStatus, deleteUser };
+// ── POST /api/user/wishlist/toggle ───────────────────────────
+const toggleWishlist = async (req, res) => {
+  try {
+    const { productId } = req.body;
+    if (!productId) {
+      return res.status(400).json({ message: 'productId là bắt buộc' });
+    }
+
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: 'Không tìm thấy người dùng' });
+
+    const idx = user.wishlist.findIndex((id) => id.toString() === productId);
+    let added;
+    if (idx === -1) {
+      user.wishlist.push(productId);
+      added = true;
+    } else {
+      user.wishlist.splice(idx, 1);
+      added = false;
+    }
+    await user.save();
+
+    res.json({ message: added ? 'Đã thêm vào yêu thích' : 'Đã xóa khỏi yêu thích', added, wishlist: user.wishlist });
+  } catch (err) {
+    res.status(500).json({ message: 'Lỗi server', error: err.message });
+  }
+};
+
+// ── GET /api/user/wishlist ───────────────────────────────────
+const getWishlist = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).populate('wishlist').select('wishlist');
+    if (!user) return res.status(404).json({ message: 'Không tìm thấy người dùng' });
+    res.json({ wishlist: user.wishlist });
+  } catch (err) {
+    res.status(500).json({ message: 'Lỗi server', error: err.message });
+  }
+};
+
+module.exports = { getProfile, updateProfile, changePassword, uploadAvatar, getAllUsers, updateUserRole, toggleUserStatus, deleteUser, toggleWishlist, getWishlist };

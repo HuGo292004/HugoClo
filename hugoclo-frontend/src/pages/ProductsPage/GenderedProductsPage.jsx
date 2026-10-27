@@ -118,7 +118,7 @@ const GENDER_CONFIG = {
 };
 
 // ── Main component ──
-const GenderedProductsPage = ({ genderKey }) => {
+const GenderedProductsPage = ({ genderKey, includeUnisex = true }) => {
   const config = GENDER_CONFIG[genderKey];
 
   const [filters,     setFilters]    = useState(defaultFilters);
@@ -135,11 +135,17 @@ const GenderedProductsPage = ({ genderKey }) => {
   const [error,      setError]      = useState(null);
 
   const buildParams = useCallback(() => {
+    // Gửi gender=men,unisex hoặc gender=women,unisex tùy theo prop
+    const genderValue =
+      includeUnisex && config.gender !== 'unisex'
+        ? `${config.gender},unisex`
+        : config.gender;
+
     const params = {
       page,
-      limit:    perPage,
-      sort:     sortBy,
-      category: config.gender, // luon filter theo gioi tinh
+      limit:  perPage,
+      sort:   sortBy,
+      gender: genderValue,
     };
 
     if (quickFilter === 'sale')      params.isOnSale    = true;
@@ -155,7 +161,7 @@ const GenderedProductsPage = ({ genderKey }) => {
     if (filters.colors.length > 0)       params.colors    = filters.colors.join(',');
 
     return params;
-  }, [page, perPage, sortBy, quickFilter, filters, config.gender]);
+  }, [page, perPage, sortBy, quickFilter, filters, config.gender, includeUnisex]);
 
   useEffect(() => {
     let cancelled = false;

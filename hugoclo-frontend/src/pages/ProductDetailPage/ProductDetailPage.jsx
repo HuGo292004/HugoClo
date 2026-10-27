@@ -207,9 +207,9 @@ const ProductDetailPage = () => {
   const sizes      = product.sizes  || [];
   const categoryLabel = product.category?.name || '';
 
-  // ── Ảnh hiển thị: ưu tiên ảnh của màu đang chọn ──
-  const colorImages = colors[selectedColor]?.images;
-  const images = colorImages?.length ? colorImages : allImages;
+  // ── Ảnh hiển thị: ưu tiên bộ sưu tập riêng nếu màu có >1 ảnh, ngược lại hiển thị allImages ──
+  const currentColorImages = colors[selectedColor]?.images?.filter(Boolean) || [];
+  const images = currentColorImages.length > 1 ? currentColorImages : allImages;
 
   return (
     <div className="min-h-screen bg-white">
@@ -305,7 +305,16 @@ const ProductDetailPage = () => {
                 {images.map((img, i) => (
                   <button
                     key={i}
-                    onClick={() => setActiveImg(i)}
+                    onClick={() => {
+                      setActiveImg(i);
+                      // Tự động tìm màu tương ứng với ảnh này nếu có
+                      if (img) {
+                        const matchedIdx = colors.findIndex((c) => c.images?.includes(img));
+                        if (matchedIdx !== -1 && matchedIdx !== selectedColor) {
+                          setColor(matchedIdx);
+                        }
+                      }
+                    }}
                     className={`w-[calc(25%-9px)] aspect-square rounded-xl overflow-hidden border-2 cursor-pointer transition-all duration-200 bg-[#f8f8f8] p-0 ${
                       i === activeImg ? 'border-[#1a1a1a] shadow-md' : 'border-transparent hover:border-[#d0d0d0]'
                     }`}
@@ -371,12 +380,17 @@ const ProductDetailPage = () => {
                       key={i}
                       onClick={() => {
                         setColor(i);
-                        // Nếu màu có ảnh riêng → dùng ảnh đó, không → nhảy tới images[i]
-                        const cImgs = color.images;
-                        if (cImgs?.length) {
+                        const cImgs = color.images?.filter(Boolean) || [];
+                        if (cImgs.length > 0) {
+                          const targetImg = cImgs[0];
+                          const foundIdx = images.findIndex((img) => img === targetImg);
+                          if (foundIdx !== -1) {
+                            setActiveImg(foundIdx);
+                            return;
+                          }
                           setActiveImg(0);
                         } else {
-                          setActiveImg(Math.min(i, allImages.length - 1));
+                          setActiveImg(Math.min(i, images.length - 1));
                         }
                       }}
                       title={color.name}

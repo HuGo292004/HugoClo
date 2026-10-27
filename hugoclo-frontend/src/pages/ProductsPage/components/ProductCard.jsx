@@ -1,13 +1,10 @@
-// ============================================================
-// ProductCard — Square image, badges, hover overlay, quick-add
-// ============================================================
-
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { HeartOutlined, HeartFilled, EyeOutlined, ShoppingCartOutlined } from '@ant-design/icons';
 import { message } from 'antd';
 import { formatPrice } from '../../../data/products';
 import { useCart } from '../../../context/CartContext';
+import { useWishlist } from '../../../context/WishlistContext';
 
 const StarRating = ({ rating, count }) => (
   <div className="flex items-center gap-1.5">
@@ -23,10 +20,11 @@ const StarRating = ({ rating, count }) => (
 );
 
 const ProductCard = ({ product }) => {
-  const [wished, setWished]   = useState(false);
   const [hovered, setHovered] = useState(false);
   const { addToCart }        = useCart();
+  const { toggleWishlist, isWished } = useWishlist();
   const navigate = useNavigate();
+  const wished = isWished(product._id || product.id);
   const discount = product.originalPrice
     ? Math.round((1 - product.price / product.originalPrice) * 100)
     : 0;
@@ -38,9 +36,9 @@ const ProductCard = ({ product }) => {
   
   const handleWish = (e) => {
     e.stopPropagation();
-    setWished((w) => !w);
-    message.success(wished ? 'Đã xóa khỏi yêu thích' : 'Đã thêm vào yêu thích ❤️');
+    toggleWishlist(product);
   };
+
 
   return (
     <div

@@ -31,46 +31,16 @@ const GenderFilterSortBar = ({
   total, page, perPage,
   accentColor = '#1a1a1a',
 }) => {
-  const start = (page - 1) * perPage + 1;
+  const start = total === 0 ? 0 : (page - 1) * perPage + 1;
   const end   = Math.min(page * perPage, total);
 
   return (
     <div className="sticky top-[108px] z-[99] bg-white border-b border-[#e8e8e8] shadow-[0_2px_8px_rgba(0,0,0,0.04)]">
-      <div className="max-w-[1320px] mx-auto px-6 py-3 flex items-center justify-between gap-4">
-
-        {/* Quick filter chips */}
-        <div className="flex items-center gap-2 flex-wrap">
-          {QUICK_FILTERS.map(({ key, label }) => (
-            <button
-              key={key}
-              onClick={() => onQuickChange(key)}
-              className="h-8 px-4 text-[12px] font-semibold rounded-full border cursor-pointer transition-all duration-200 whitespace-nowrap"
-              style={
-                activeQuick === key
-                  ? { backgroundColor: accentColor, color: '#fff', borderColor: accentColor }
-                  : { backgroundColor: '#fff', color: '#555', borderColor: '#e0e0e0' }
-              }
-              onMouseEnter={(e) => {
-                if (activeQuick !== key) {
-                  e.currentTarget.style.borderColor = accentColor;
-                  e.currentTarget.style.color = accentColor;
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (activeQuick !== key) {
-                  e.currentTarget.style.borderColor = '#e0e0e0';
-                  e.currentTarget.style.color = '#555';
-                }
-              }}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
+      <div className="max-w-[1320px] mx-auto px-6 py-3 flex items-center justify-end gap-4">
 
         {/* Right controls */}
         <div className="flex items-center gap-3 shrink-0">
-          <span className="text-[12px] text-[#999] whitespace-nowrap hidden lg:block">
+          <span className="text-[13px] text-[#888] whitespace-nowrap hidden lg:block">
             {start}–{end} / {total} sản phẩm
           </span>
 
