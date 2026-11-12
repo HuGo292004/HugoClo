@@ -104,7 +104,7 @@ const ProductCard = ({ product }) => {
       <div className="p-4 flex flex-col gap-2 flex-1">
         {/* Category label */}
         <span className="text-[10px] font-semibold text-[#aaa] uppercase tracking-[0.12em]">
-          {product.category === 'men' ? 'Nam' : product.category === 'women' ? 'Nữ' : 'Unisex'}
+          {product.gender === 'men' ? 'Nam' : product.gender === 'women' ? 'Nữ' : 'Unisex'}
         </span>
 
         {/* Product name — 2 lines max */}

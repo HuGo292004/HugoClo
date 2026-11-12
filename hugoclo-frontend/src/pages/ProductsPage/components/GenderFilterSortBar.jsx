@@ -41,7 +41,7 @@ const GenderFilterSortBar = ({
         {/* Right controls */}
         <div className="flex items-center gap-3 shrink-0">
           <span className="text-[13px] text-[#888] whitespace-nowrap hidden lg:block">
-            {start}–{end} / {total} sản phẩm
+          {total} sản phẩm
           </span>
 
           <Select

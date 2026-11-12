@@ -25,9 +25,8 @@ import logo from '../../../assets/hugoclo_logo.png';
 const NAV_ITEMS = [
   { key: 'products',   label: 'Sản Phẩm',   navigate: '/products' },
   { key: 'men',        label: 'Nam',         navigate: '/men' },
-  { key: 'women',      label: 'Nữ',          navigate: '/women' },
-  { key: 'collection', label: 'Bộ Sưu Tập' },
-  { key: 'sale',       label: 'Sale', highlight: true },
+  { key: 'women',      label: 'Nữ',          navigate: '/women'  },
+  { key: 'sale',       label: 'Sale', navigate: '/sale', highlight: true },
 ];
 
 const MainHeader = () => {

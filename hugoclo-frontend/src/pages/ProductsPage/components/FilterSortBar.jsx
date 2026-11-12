@@ -28,8 +28,8 @@ const FilterSortBar = ({
 
         <div className="flex items-center gap-3">
           {/* Result count */}
-          <span className="text-[14px] text-[#999] whitespace-nowrap hidden lg:block">
-            {start}–{end} / {total} sản phẩm
+          <span className="text-[14px] text-[#999] whitespace-nowrap himden lg:block">
+            {total} sản phẩm
           </span>
 
           {/* Sort dropdown */}

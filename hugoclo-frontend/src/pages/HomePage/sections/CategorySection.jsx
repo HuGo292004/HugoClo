@@ -1,11 +1,14 @@
 // ============================================================
-// CategorySection — 4 category cards (Tailwind CSS)
+// CategorySection — 3 category cards, click → navigate
 // ============================================================
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { CATEGORIES } from '../../../data/products';
 
 const CategorySection = () => {
+  const navigate = useNavigate();
+
   return (
     <section className="bg-white section-py" id="categories" aria-label="Danh mục sản phẩm">
       <div className="container-custom">
@@ -18,13 +21,13 @@ const CategorySection = () => {
           <p className="text-[16px] text-[#888]">Tìm phong cách của bạn từ bộ sưu tập đa dạng</p>
         </div>
 
-        {/* Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
+        {/* Grid — 3 cột */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
           {CATEGORIES.map((cat) => (
-            <a
+            <button
               key={cat.id}
-              href={`#${cat.key}`}
-              className="group relative block rounded-lg overflow-hidden cursor-pointer no-underline bg-[#f0f0f0] aspect-[3/4] transition-all duration-300 hover:-translate-y-1 hover:scale-[1.01] hover:shadow-[0_16px_48px_rgba(0,0,0,0.16)]"
+              onClick={() => navigate(cat.navigate)}
+              className="group relative block rounded-lg overflow-hidden cursor-pointer bg-[#f0f0f0] aspect-[3/4] transition-all duration-300 hover:-translate-y-1 hover:scale-[1.01] hover:shadow-[0_16px_48px_rgba(0,0,0,0.16)] border-none p-0 w-full"
               aria-label={`Xem danh mục ${cat.label}`}
             >
               {/* Sale ribbon */}
@@ -54,7 +57,7 @@ const CategorySection = () => {
                   →
                 </span>
               </div>
-            </a>
+            </button>
           ))}
         </div>
 
@@ -64,3 +67,4 @@ const CategorySection = () => {
 };
 
 export default CategorySection;
+
