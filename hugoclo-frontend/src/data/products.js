@@ -22,6 +22,7 @@ export const CATEGORIES = [
     key: 'men',
     label: 'Nam',
     image: categoryMen,
+    navigate: '/men',
     isSale: false,
   },
   {
@@ -29,13 +30,7 @@ export const CATEGORIES = [
     key: 'women',
     label: 'Nữ',
     image: categoryWomen,
-    isSale: false,
-  },
-  {
-    id: 3,
-    key: 'new',
-    label: 'Hàng Mới',
-    image: categoryNew,
+    navigate: '/women',
     isSale: false,
   },
   {
@@ -43,6 +38,7 @@ export const CATEGORIES = [
     key: 'sale',
     label: 'Sale',
     image: categorySale,
+    navigate: '/sale',
     isSale: true,
   },
 ];

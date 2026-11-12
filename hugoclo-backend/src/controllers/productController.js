@@ -5,6 +5,7 @@
 const Product  = require("../models/Product");
 const Review   = require("../models/Review");
 const Category = require("../models/Category");
+const { buildVietnameseRegexPattern } = require("../utils/vietnameseUtils");
 
 
 /* ── Tạo sản phẩm (kèm upload ảnh Cloudinary) ────────────── */
@@ -53,9 +54,12 @@ const getProducts = async (req, res) => {
     // ── Build filter ──────────────────────────────────────────
     const filter = {};
 
-    // Tìm kiếm theo tên
+    // Tìm kiếm theo tên (hỗ trợ cả tiếng Việt có dấu và không dấu)
     if (req.query.keyword) {
-      filter.name = { $regex: req.query.keyword, $options: "i" };
+      const pattern = buildVietnameseRegexPattern(req.query.keyword);
+      if (pattern) {
+        filter.name = { $regex: pattern, $options: "i" };
+      }
     }
 
     // ── Lọc gender ────────────────────────────────────────────

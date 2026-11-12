@@ -29,6 +29,8 @@ import MyOrdersPage from './pages/MyOrdersPage/MyOrdersPage';
 import ProfilePage from './pages/ProfilePage/ProfilePage';
 import WishlistPage from './pages/WishlistPage/WishlistPage';
 import { WishlistProvider } from './context/WishlistContext';
+import SalePage from './pages/SalePage/SalePage';
+import ScrollToTop from './components/ScrollToTop';
 import './index.css';
 
 const antdTheme = {
@@ -57,6 +59,7 @@ const MainLayout = ({ children }) => (
 function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <AuthProvider>
         <CartProvider>
           <WishlistProvider>
@@ -225,6 +228,16 @@ function App() {
 
             {/* Fallback */}
             <Route path="*" element={<MainLayout><HomePage /></MainLayout>} />
+
+            {/* Sale */}
+            <Route
+              path="/sale"
+              element={
+                <MainLayout>
+                  <SalePage />
+                </MainLayout>
+              }
+            />
             </Routes>
             </ConfigProvider>
           </WishlistProvider>

@@ -20,7 +20,7 @@ const HeroSection = () => {
           {/* Eyebrow */}
           <div className="inline-flex items-center gap-2 text-[12px] font-bold uppercase tracking-[0.14em] text-[#555] mb-6">
             <span className="w-2 h-2 rounded-full bg-primary shrink-0 inline-block" />
-            Bộ Sưu Tập Mới 2024
+            Bộ Sưu Tập Mới 2026
           </div>
 
           {/* Headline */}
@@ -75,7 +75,7 @@ const HeroSection = () => {
           {/* Floating badge */}
           <div className="absolute bottom-10 left-5 bg-primary text-white px-[22px] py-3.5 rounded-lg flex flex-col gap-0.5 shadow-[0_8px_32px_rgba(0,0,0,0.25)] animate-fade-in-up-delay">
             <span className="text-[10px] uppercase tracking-[0.1em] opacity-70">Bộ Sưu Tập</span>
-            <span className="text-[20px] font-black tracking-[0.04em]">SS 2024</span>
+            <span className="text-[20px] font-black tracking-[0.04em]">SS 2026</span>
           </div>
         </div>
       </div>
